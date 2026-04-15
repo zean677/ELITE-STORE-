@@ -5,9 +5,8 @@ import { useGetProducts, useGetCategories } from '@workspace/api-client-react';
 import { PublicLayout } from '@/components/Layout';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLanguage } from '@/i18n';
-import { Search, ChevronRight, Zap } from 'lucide-react';
+import { Search, ChevronRight, Zap, ArrowRight, Package } from 'lucide-react';
 
-// Per-category styling
 const CATEGORY_STYLES: Record<string, { gradient: string; glow: string; badge: string }> = {
   mobile_games: {
     gradient: 'from-violet-600/30 via-purple-500/20 to-fuchsia-500/10',
@@ -44,31 +43,177 @@ const CATEGORY_ICONS: Record<string, string> = {
   general: '🛒',
 };
 
-// Smart color per product based on name keywords
-function getProductStyle(name: string, category: string) {
-  const n = name.toLowerCase();
-  if (n.includes('pubg') || n.includes('ببجي')) return { grad: 'from-yellow-600/40 to-orange-600/20', dot: '#f59e0b' };
-  if (n.includes('free fire') || n.includes('فري فاير')) return { grad: 'from-orange-500/40 to-red-600/20', dot: '#f97316' };
-  if (n.includes('clash') || n.includes('كلاش')) return { grad: 'from-blue-500/40 to-indigo-600/20', dot: '#3b82f6' };
-  if (n.includes('steam')) return { grad: 'from-slate-500/40 to-blue-800/20', dot: '#64748b' };
-  if (n.includes('google') || n.includes('play')) return { grad: 'from-green-500/40 to-emerald-600/20', dot: '#22c55e' };
-  if (n.includes('itunes') || n.includes('apple')) return { grad: 'from-gray-400/40 to-slate-600/20', dot: '#9ca3af' };
-  if (n.includes('mobile legend') || n.includes('ml')) return { grad: 'from-red-600/40 to-rose-800/20', dot: '#dc2626' };
-  if (n.includes('valorant')) return { grad: 'from-red-500/40 to-pink-600/20', dot: '#ef4444' };
-  if (n.includes('league') || n.includes('lol')) return { grad: 'from-blue-600/40 to-cyan-600/20', dot: '#2563eb' };
-  if (n.includes('fortnite')) return { grad: 'from-cyan-500/40 to-blue-700/20', dot: '#06b6d4' };
-  if (n.includes('minecraft')) return { grad: 'from-green-600/40 to-lime-700/20', dot: '#16a34a' };
-  if (n.includes('roblox')) return { grad: 'from-red-400/40 to-red-700/20', dot: '#f87171' };
-  if (n.includes('cod') || n.includes('call of duty')) return { grad: 'from-zinc-500/40 to-neutral-700/20', dot: '#71717a' };
-  if (n.includes('uc') || n.includes('يو سي')) return { grad: 'from-yellow-500/40 to-amber-700/20', dot: '#eab308' };
-  const styles = CATEGORY_STYLES[category];
-  if (category === 'mobile_games') return { grad: 'from-violet-600/30 to-purple-800/20', dot: '#7c3aed' };
-  if (category === 'gift_cards') return { grad: 'from-amber-500/30 to-orange-700/20', dot: '#d97706' };
-  if (category === 'pc_games') return { grad: 'from-blue-600/30 to-cyan-800/20', dot: '#2563eb' };
-  if (category === 'services') return { grad: 'from-emerald-500/30 to-teal-700/20', dot: '#059669' };
-  return { grad: 'from-primary/20 to-secondary/10', dot: '#6c5ce7' };
+type GameInfo = {
+  nameEn: string;
+  nameAr: string;
+  grad: string;
+  dot: string;
+  icon: string;
+};
+
+const KNOWN_GAMES: { keywords: string[]; info: GameInfo }[] = [
+  {
+    keywords: ['pubg', 'ببجي', 'battlegrounds'],
+    info: { nameEn: 'PUBG Mobile', nameAr: 'ببجي موبايل', grad: 'from-yellow-600/50 to-orange-700/30', dot: '#f59e0b', icon: '🟡' },
+  },
+  {
+    keywords: ['free fire', 'فري فاير', 'freefire'],
+    info: { nameEn: 'Free Fire', nameAr: 'فري فاير', grad: 'from-orange-500/50 to-red-700/30', dot: '#f97316', icon: '🔥' },
+  },
+  {
+    keywords: ['clash of clan', 'كلاش اوف كلان', 'clash royale', 'كلاش رويال'],
+    info: { nameEn: 'Clash', nameAr: 'كلاش', grad: 'from-blue-500/50 to-indigo-700/30', dot: '#3b82f6', icon: '⚔️' },
+  },
+  {
+    keywords: ['mobile legend', 'موبايل ليجند', 'mlbb'],
+    info: { nameEn: 'Mobile Legends', nameAr: 'موبايل ليجند', grad: 'from-red-600/50 to-rose-800/30', dot: '#dc2626', icon: '🏆' },
+  },
+  {
+    keywords: ['valorant', 'فالورانت'],
+    info: { nameEn: 'Valorant', nameAr: 'فالورانت', grad: 'from-red-500/50 to-pink-700/30', dot: '#ef4444', icon: '🎯' },
+  },
+  {
+    keywords: ['league of legend', 'لول', 'lol', 'wild rift'],
+    info: { nameEn: 'League of Legends', nameAr: 'ليج أوف ليجندز', grad: 'from-blue-600/50 to-cyan-700/30', dot: '#2563eb', icon: '⚡' },
+  },
+  {
+    keywords: ['fortnite', 'فورتنايت'],
+    info: { nameEn: 'Fortnite', nameAr: 'فورتنايت', grad: 'from-cyan-500/50 to-blue-800/30', dot: '#06b6d4', icon: '🌀' },
+  },
+  {
+    keywords: ['minecraft', 'ماين كرافت'],
+    info: { nameEn: 'Minecraft', nameAr: 'ماينكرافت', grad: 'from-green-600/50 to-lime-800/30', dot: '#16a34a', icon: '🟩' },
+  },
+  {
+    keywords: ['roblox', 'روبلوكس'],
+    info: { nameEn: 'Roblox', nameAr: 'روبلوكس', grad: 'from-red-400/50 to-red-700/30', dot: '#f87171', icon: '🎲' },
+  },
+  {
+    keywords: ['call of duty', 'cod', 'كول اوف ديوتي'],
+    info: { nameEn: 'Call of Duty', nameAr: 'كول أوف ديوتي', grad: 'from-zinc-500/50 to-neutral-800/30', dot: '#71717a', icon: '🎖️' },
+  },
+  {
+    keywords: ['steam', 'ستيم'],
+    info: { nameEn: 'Steam', nameAr: 'ستيم', grad: 'from-slate-500/50 to-blue-900/30', dot: '#64748b', icon: '🎮' },
+  },
+  {
+    keywords: ['google play', 'جوجل بلاي'],
+    info: { nameEn: 'Google Play', nameAr: 'جوجل بلاي', grad: 'from-green-500/50 to-emerald-700/30', dot: '#22c55e', icon: '▶️' },
+  },
+  {
+    keywords: ['itunes', 'apple', 'app store', 'ابل'],
+    info: { nameEn: 'Apple / iTunes', nameAr: 'أبل / آيتيونز', grad: 'from-gray-400/50 to-slate-700/30', dot: '#9ca3af', icon: '🍎' },
+  },
+  {
+    keywords: ['amazon', 'امازون'],
+    info: { nameEn: 'Amazon', nameAr: 'أمازون', grad: 'from-orange-400/50 to-yellow-700/30', dot: '#fb923c', icon: '📦' },
+  },
+  {
+    keywords: ['netflix', 'نتفليكس'],
+    info: { nameEn: 'Netflix', nameAr: 'نتفليكس', grad: 'from-red-600/50 to-red-900/30', dot: '#dc2626', icon: '🎬' },
+  },
+  {
+    keywords: ['playstation', 'psn', 'بلايستيشن'],
+    info: { nameEn: 'PlayStation', nameAr: 'بلايستيشن', grad: 'from-blue-700/50 to-indigo-900/30', dot: '#1d4ed8', icon: '🎮' },
+  },
+  {
+    keywords: ['xbox', 'اكس بوكس'],
+    info: { nameEn: 'Xbox', nameAr: 'إكس بوكس', grad: 'from-green-600/50 to-green-900/30', dot: '#15803d', icon: '🎯' },
+  },
+  {
+    keywords: ['honor of king', 'honor of kings'],
+    info: { nameEn: 'Honor of Kings', nameAr: 'أونر أوف كينجز', grad: 'from-purple-600/50 to-violet-900/30', dot: '#9333ea', icon: '👑' },
+  },
+  {
+    keywords: ['brawl star', 'براول ستارز'],
+    info: { nameEn: 'Brawl Stars', nameAr: 'براول ستارز', grad: 'from-yellow-500/50 to-amber-800/30', dot: '#eab308', icon: '💥' },
+  },
+  {
+    keywords: ['hay day', 'هاي داي'],
+    info: { nameEn: 'Hay Day', nameAr: 'هاي داي', grad: 'from-lime-500/50 to-green-800/30', dot: '#84cc16', icon: '🌻' },
+  },
+];
+
+function getGameInfo(productName: string, category: string): GameInfo & { key: string } {
+  const n = productName.toLowerCase();
+  for (const game of KNOWN_GAMES) {
+    if (game.keywords.some(k => n.includes(k))) {
+      return { ...game.info, key: game.info.nameEn };
+    }
+  }
+  // fallback by category
+  if (category === 'gift_cards') return { nameEn: 'Gift Cards', nameAr: 'بطاقات هدايا', grad: 'from-amber-500/50 to-orange-700/30', dot: '#d97706', icon: '🎁', key: 'gift_cards' };
+  if (category === 'services') return { nameEn: 'Services', nameAr: 'خدمات', grad: 'from-emerald-500/50 to-teal-700/30', dot: '#059669', icon: '⚡', key: 'services' };
+  return { nameEn: productName, nameAr: productName, grad: 'from-primary/30 to-secondary/10', dot: '#6c5ce7', icon: '🎮', key: productName };
 }
 
+function getProductStyle(name: string, category: string) {
+  const info = getGameInfo(name, category);
+  return { grad: info.grad, dot: info.dot };
+}
+
+// ─── Game Card ───────────────────────────────────────────────────────────────
+function GameCard({ game, count, onClick, image }: {
+  game: GameInfo;
+  count: number;
+  onClick: () => void;
+  image?: string;
+}) {
+  const { lang } = useLanguage();
+  const name = lang === 'ar' ? game.nameAr : game.nameEn;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.93 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.93 }}
+      whileHover={{ y: -6, scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:border-white/15 transition-all duration-300"
+      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
+    >
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+        style={{ boxShadow: `inset 0 0 40px ${game.dot}22` }} />
+
+      {/* Top visual */}
+      <div className={`relative h-32 bg-gradient-to-br ${game.grad} flex items-center justify-center overflow-hidden`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_130%,rgba(255,255,255,0.07),transparent_60%)]" />
+        {/* Decorative circles */}
+        <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full opacity-20"
+          style={{ background: game.dot }} />
+        <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full opacity-10"
+          style={{ background: game.dot }} />
+        {image ? (
+          <img src={image} alt={name} className="h-16 w-auto object-contain drop-shadow-2xl z-10" />
+        ) : (
+          <div className="z-10 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            style={{ background: `${game.dot}22`, border: `1.5px solid ${game.dot}44` }}>
+            {game.icon}
+          </div>
+        )}
+        {/* Badge */}
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold"
+          style={{ background: `${game.dot}22`, border: `1px solid ${game.dot}44`, color: game.dot }}>
+          <Package size={9} />
+          {count} {lang === 'ar' ? 'باقة' : 'pkg'}
+        </div>
+      </div>
+
+      {/* Bottom */}
+      <div className="p-3 flex items-center justify-between">
+        <span className="font-bold text-sm leading-tight">{name}</span>
+        <div className="w-7 h-7 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+          style={{ background: `${game.dot}20`, color: game.dot }}>
+          <ChevronRight size={14} className={lang === 'ar' ? 'rotate-180' : ''} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({ product }: { product: any }) {
   const { formatPrice } = useCurrency();
   const { lang } = useLanguage();
@@ -85,11 +230,9 @@ function ProductCard({ product }: { product: any }) {
       className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300"
       style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}
     >
-      {/* Glow overlay on hover */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
         style={{ boxShadow: `inset 0 0 30px ${style.dot}22` }} />
 
-      {/* Card top */}
       <div className={`relative h-28 bg-gradient-to-br ${style.grad} flex items-center justify-center overflow-hidden`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.06),transparent_60%)]" />
         {product.image ? (
@@ -102,7 +245,6 @@ function ProductCard({ product }: { product: any }) {
             </div>
           </div>
         )}
-        {/* Live badge */}
         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
           style={{ background: `${style.dot}22`, border: `1px solid ${style.dot}44`, color: style.dot }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: style.dot }} />
@@ -110,17 +252,16 @@ function ProductCard({ product }: { product: any }) {
         </div>
       </div>
 
-      {/* Card body */}
       <div className="p-3">
         <h3 className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{name}</h3>
         <div className="flex items-center justify-between mt-3">
           <div>
             <span className="text-xs text-muted-foreground block">
-              {product.productType === 'amount' ? 'ابتداءً من' : 'السعر'}
+              {product.productType === 'amount' ? (lang === 'ar' ? 'ابتداءً من' : 'From') : (lang === 'ar' ? 'السعر' : 'Price')}
             </span>
             <span className="font-black text-sm" style={{ color: style.dot }}>
               {parseFloat(product.priceUsd ?? '0') === 0
-                ? <span className="text-muted-foreground text-xs">يُحدَّد عند الطلب</span>
+                ? <span className="text-muted-foreground text-xs">{lang === 'ar' ? 'يُحدَّد عند الطلب' : 'Custom'}</span>
                 : formatPrice(product.priceUsd)}
             </span>
           </div>
@@ -130,7 +271,7 @@ function ProductCard({ product }: { product: any }) {
             style={{ background: `linear-gradient(135deg, ${style.dot}, ${style.dot}cc)`, boxShadow: `0 4px 12px ${style.dot}44` }}
           >
             <Zap size={10} />
-            شحن
+            {lang === 'ar' ? 'شحن' : 'Buy'}
           </Link>
         </div>
       </div>
@@ -138,6 +279,7 @@ function ProductCard({ product }: { product: any }) {
   );
 }
 
+// ─── Category Tab ─────────────────────────────────────────────────────────────
 function CategoryTab({ cat, active, onClick }: { cat: any; active: boolean; onClick: () => void }) {
   const { lang } = useLanguage();
   const style = CATEGORY_STYLES[cat.id] ?? CATEGORY_STYLES.general;
@@ -153,53 +295,130 @@ function CategoryTab({ cat, active, onClick }: { cat: any; active: boolean; onCl
           ? 'border-white/20 text-white'
           : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-white/10'
       }`}
-      style={active ? { background: `linear-gradient(135deg, ${CATEGORY_STYLES[cat.id]?.glow?.replace('shadow-', '') || '#6c5ce7'}33, ${CATEGORY_STYLES[cat.id]?.glow?.replace('shadow-', '') || '#00cec9'}11)` } : {}}
+      style={active ? { background: `linear-gradient(135deg, ${style.badge?.replace('bg-', '').split('/')[0] || '#6c5ce7'}22, transparent)` } : {}}
     >
       <span className="text-base">{CATEGORY_ICONS[cat.id] ?? '🛒'}</span>
       <span>{name}</span>
       <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${style.badge}`}>
         {cat.productCount}
       </span>
-      {active && (
-        <motion.div layoutId="activeCat" className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
-      )}
+      {active && <motion.div layoutId="activeCat" className="absolute inset-0 rounded-xl ring-1 ring-white/20" />}
     </motion.button>
   );
 }
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Products() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
 
   const { data: categoriesData } = useGetCategories();
-  const { data, isLoading } = useGetProducts({
-    search: search || undefined,
+
+  // Fetch all products for game grouping (when no game selected)
+  const { data: allData, isLoading: allLoading } = useGetProducts({
+    category: activeCategory || undefined,
+    page: 1,
+    limit: 500,
+  });
+
+  // Fetch products for selected game (via search keyword)
+  const { data: gameData, isLoading: gameLoading } = useGetProducts({
+    search: selectedGame ? selectedGame : (search || undefined),
     category: activeCategory || undefined,
     page,
     limit: 24,
   });
 
-  const products = data?.products ?? [];
-  const total = data?.total ?? 0;
+  const isSearching = search.length > 0;
+  const showingGames = !isSearching && selectedGame === null;
+
+  // Group all products by game
+  const games = useMemo(() => {
+    if (!allData?.products) return [];
+    const map = new Map<string, { info: GameInfo; count: number; image?: string }>();
+    for (const p of allData.products) {
+      const info = getGameInfo(p.name, p.category ?? 'general');
+      const existing = map.get(info.key);
+      if (existing) {
+        existing.count++;
+        if (!existing.image && p.image) existing.image = p.image;
+      } else {
+        map.set(info.key, { info, count: 1, image: p.image ?? undefined });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [allData?.products]);
+
+  const products = gameData?.products ?? [];
+  const total = gameData?.total ?? 0;
 
   const handleCategory = (id: string) => {
     setActiveCategory(id === activeCategory ? '' : id);
+    setSelectedGame(null);
     setPage(1);
   };
+
+  const handleGameSelect = (gameKey: string) => {
+    // Find the English keyword to use as search
+    const game = KNOWN_GAMES.find(g => g.info.nameEn === gameKey);
+    if (game) {
+      setSelectedGame(game.keywords[0]);
+    } else {
+      setSelectedGame(gameKey);
+    }
+    setPage(1);
+  };
+
+  const handleBack = () => {
+    setSelectedGame(null);
+    setPage(1);
+  };
+
+  const selectedGameInfo = useMemo(() => {
+    if (!selectedGame) return null;
+    const found = KNOWN_GAMES.find(g => g.keywords[0] === selectedGame);
+    return found?.info ?? null;
+  }, [selectedGame]);
 
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 py-8">
 
+        {/* Breadcrumb / Back */}
+        <AnimatePresence>
+          {selectedGame && selectedGameInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex items-center gap-2 mb-5 text-sm text-muted-foreground"
+            >
+              <button onClick={handleBack} className="flex items-center gap-1.5 hover:text-foreground transition-colors font-medium">
+                <ArrowRight size={14} className={lang === 'ar' ? '' : 'rotate-180'} />
+                {lang === 'ar' ? 'الألعاب' : 'Games'}
+              </button>
+              <ChevronRight size={13} className={lang === 'ar' ? 'rotate-180' : ''} />
+              <span className="text-foreground font-semibold">
+                {lang === 'ar' ? selectedGameInfo.nameAr : selectedGameInfo.nameEn}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="font-heading text-3xl font-black mb-1">
-            {lang === 'ar' ? 'المتجر' : 'Store'}
+            {selectedGame && selectedGameInfo
+              ? (lang === 'ar' ? selectedGameInfo.nameAr : selectedGameInfo.nameEn)
+              : (lang === 'ar' ? 'المتجر' : 'Store')}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {lang === 'ar' ? `${total} منتج متاح` : `${total} products available`}
+            {showingGames
+              ? (lang === 'ar' ? `${games.length} لعبة متاحة` : `${games.length} games available`)
+              : (lang === 'ar' ? `${total} منتج متاح` : `${total} products available`)}
           </p>
         </div>
 
@@ -208,9 +427,9 @@ export default function Products() {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
-            placeholder={lang === 'ar' ? 'ابحث عن منتج...' : 'Search products...'}
+            placeholder={lang === 'ar' ? 'ابحث عن منتج أو لعبة...' : 'Search games or products...'}
             value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            onChange={e => { setSearch(e.target.value); setSelectedGame(null); setPage(1); }}
             className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-2xl text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
@@ -221,7 +440,7 @@ export default function Products() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => { setActiveCategory(''); setPage(1); }}
+              onClick={() => { setActiveCategory(''); setSelectedGame(null); setPage(1); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all whitespace-nowrap ${
                 activeCategory === ''
                   ? 'bg-primary/20 border-primary/40 text-primary'
@@ -241,50 +460,91 @@ export default function Products() {
           </div>
         )}
 
-        {/* Products Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
-                <div className="h-28 bg-muted" />
-                <div className="p-3 space-y-2">
-                  <div className="h-3.5 bg-muted rounded w-4/5" />
-                  <div className="h-3 bg-muted rounded w-2/5" />
-                  <div className="flex justify-between mt-3">
-                    <div className="h-5 bg-muted rounded w-1/3" />
-                    <div className="h-7 bg-muted rounded w-1/4" />
+        {/* ── GAMES LOBBY ─────────────────────────────────────────────────── */}
+        {showingGames ? (
+          allLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+                  <div className="h-32 bg-muted" />
+                  <div className="p-3 flex items-center justify-between">
+                    <div className="h-4 bg-muted rounded w-2/3" />
+                    <div className="w-7 h-7 bg-muted rounded-xl" />
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="text-5xl mb-4">🔍</div>
-            <p className="text-muted-foreground text-lg font-medium">
-              {lang === 'ar' ? 'لا توجد منتجات' : 'No products found'}
-            </p>
-            {search && (
-              <button onClick={() => setSearch('')} className="mt-3 text-primary text-sm hover:underline">
-                {lang === 'ar' ? 'مسح البحث' : 'Clear search'}
-              </button>
-            )}
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              layout
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
-            >
-              {products.map(product => (
-                <ProductCard key={product.id} product={product} />
               ))}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          ) : games.length === 0 ? (
+            <div className="text-center py-24">
+              <div className="text-5xl mb-4">🎮</div>
+              <p className="text-muted-foreground text-lg font-medium">
+                {lang === 'ar' ? 'لا توجد ألعاب متاحة' : 'No games available'}
+              </p>
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {games.map(({ info, count, image }) => (
+                  <GameCard
+                    key={info.key}
+                    game={info}
+                    count={count}
+                    image={image}
+                    onClick={() => handleGameSelect(info.key)}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )
+
+        ) : (
+          // ── PRODUCTS VIEW ────────────────────────────────────────────────
+          gameLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+                  <div className="h-28 bg-muted" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3.5 bg-muted rounded w-4/5" />
+                    <div className="h-3 bg-muted rounded w-2/5" />
+                    <div className="flex justify-between mt-3">
+                      <div className="h-5 bg-muted rounded w-1/3" />
+                      <div className="h-7 bg-muted rounded w-1/4" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-24">
+              <div className="text-5xl mb-4">🔍</div>
+              <p className="text-muted-foreground text-lg font-medium">
+                {lang === 'ar' ? 'لا توجد منتجات' : 'No products found'}
+              </p>
+              {search && (
+                <button onClick={() => setSearch('')} className="mt-3 text-primary text-sm hover:underline">
+                  {lang === 'ar' ? 'مسح البحث' : 'Clear search'}
+                </button>
+              )}
+              {selectedGame && (
+                <button onClick={handleBack} className="mt-3 block mx-auto text-primary text-sm hover:underline">
+                  {lang === 'ar' ? 'رجوع للألعاب' : 'Back to games'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {products.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )
         )}
 
-        {/* Pagination */}
-        {total > 24 && (
+        {/* Pagination (only in products view) */}
+        {!showingGames && total > 24 && (
           <div className="flex justify-center items-center gap-3 mt-10">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
