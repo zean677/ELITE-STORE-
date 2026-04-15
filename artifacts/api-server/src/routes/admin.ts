@@ -309,45 +309,105 @@ router.patch("/admin/users/:id/suspend", requireAdmin, async (req: AuthRequest, 
 });
 
 router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
-  const AHMINIX_KEY = process.env.AHMINIX_API_KEY;
-  const SHAMS_KEY = process.env.SHAMS_API_KEY;
+  const SHAMS_TOKEN = process.env.SHAMS4STORE_API_TOKEN;
+
+  if (!SHAMS_TOKEN) {
+    res.status(500).json({ error: "SHAMS4STORE_API_TOKEN is not configured" });
+    return;
+  }
 
   let synced = 0;
   let failed = 0;
+  let skipped = 0;
 
-  const sampleProducts = [
-    { id: "ahminix_pubg_60", name: "PUBG Mobile 60 UC", nameAr: "ببجي موبايل 60 UC", category: "mobile_games", provider: "ahminix", providerProductId: "pubg_60", priceUsd: "0.99", requiredFields: ["playerId"] },
-    { id: "ahminix_pubg_325", name: "PUBG Mobile 325 UC", nameAr: "ببجي موبايل 325 UC", category: "mobile_games", provider: "ahminix", providerProductId: "pubg_325", priceUsd: "4.99", requiredFields: ["playerId"] },
-    { id: "ahminix_ff_100", name: "Free Fire 100 Diamonds", nameAr: "فري فاير 100 الماسة", category: "mobile_games", provider: "ahminix", providerProductId: "ff_100", priceUsd: "0.99", requiredFields: ["playerId"] },
-    { id: "shams_steam_10", name: "Steam Gift Card $10", nameAr: "بطاقة ستيم 10$", category: "gift_cards", provider: "shams4store", providerProductId: "steam_10", priceUsd: "10.99", requiredFields: [] },
-    { id: "shams_google_5", name: "Google Play $5", nameAr: "جوجل بلاي 5$", category: "gift_cards", provider: "shams4store", providerProductId: "google_5", priceUsd: "5.49", requiredFields: [] },
-  ];
+  const categoryMap: Record<string, string> = {
+    "التطبيقات": "services",
+    "Applications": "services",
+    "ألعاب الهاتف": "mobile_games",
+    "Mobile Games": "mobile_games",
+    "ألعاب الكمبيوتر": "pc_games",
+    "PC Games": "pc_games",
+    "بطاقات هدية": "gift_cards",
+    "Gift Cards": "gift_cards",
+  };
 
-  for (const p of sampleProducts) {
-    try {
-      await db
-        .insert(productsTable)
-        .values({
-          id: p.id,
-          name: p.name,
-          nameAr: p.nameAr,
-          category: p.category,
-          provider: p.provider,
-          providerProductId: p.providerProductId,
-          priceUsd: p.priceUsd,
-          requiredFields: p.requiredFields,
-          status: "active",
-          profitMargin: "10",
-        })
-        .onConflictDoNothing();
-      synced++;
-    } catch {
-      failed++;
+  function mapCategory(catName: string): string {
+    for (const [key, val] of Object.entries(categoryMap)) {
+      if (catName.toLowerCase().includes(key.toLowerCase())) return val;
     }
+    if (catName.toLowerCase().includes("game") || catName.toLowerCase().includes("pubg") || catName.toLowerCase().includes("free fire") || catName.toLowerCase().includes("clash")) return "mobile_games";
+    if (catName.toLowerCase().includes("steam") || catName.toLowerCase().includes("pc")) return "pc_games";
+    if (catName.toLowerCase().includes("card") || catName.toLowerCase().includes("gift") || catName.toLowerCase().includes("itunes") || catName.toLowerCase().includes("google")) return "gift_cards";
+    return "general";
   }
 
-  logger.info({ synced, failed }, "Products sync completed");
-  res.json({ synced, failed, message: `Synced ${synced} products, ${failed} failed` });
+  try {
+    const response = await fetch(`https://api.shams4store.com/client/api/products`, {
+      headers: { "api-token": SHAMS_TOKEN, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      res.status(502).json({ error: `shams4store API returned ${response.status}` });
+      return;
+    }
+
+    const products: Array<{
+      id: number;
+      name: string;
+      description?: string;
+      price: number;
+      params: string[];
+      category_name: string;
+      available: boolean;
+      product_type: string;
+      parent_id: number;
+    }> = await response.json();
+
+    for (const p of products) {
+      try {
+        const productId = `shams_${p.id}`;
+        const category = mapCategory(p.category_name);
+        const price = typeof p.price === "number" ? p.price : parseFloat(String(p.price));
+
+        await db
+          .insert(productsTable)
+          .values({
+            id: productId,
+            name: p.name,
+            nameAr: p.name,
+            description: p.description ?? null,
+            category,
+            provider: "shams4store",
+            providerProductId: String(p.id),
+            priceUsd: String(price),
+            requiredFields: p.params ?? [],
+            status: p.available ? "active" : "inactive",
+            profitMargin: "10",
+          })
+          .onConflictDoUpdate({
+            target: productsTable.id,
+            set: {
+              name: p.name,
+              priceUsd: String(price),
+              status: p.available ? "active" : "inactive",
+              requiredFields: p.params ?? [],
+            },
+          });
+        synced++;
+      } catch (err) {
+        logger.error({ err, productId: p.id }, "Failed to upsert product");
+        failed++;
+      }
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch from shams4store");
+    res.status(502).json({ error: "Failed to connect to shams4store API" });
+    return;
+  }
+
+  logger.info({ synced, failed, skipped }, "Products sync from shams4store completed");
+  res.json({ synced, failed, skipped, message: `Synced ${synced} products from shams4store` });
 });
 
 router.get("/admin/revenue-chart", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
