@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { useGetProduct, useCreateOrder } from '@workspace/api-client-react';
@@ -6,8 +6,19 @@ import { PublicLayout } from '@/components/Layout';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLanguage } from '@/i18n';
 import { useAuth } from '@/hooks/use-auth';
-import { ShoppingBag, Minus, Plus, Loader2, ChevronLeft } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, Loader2, ChevronLeft, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+function getSavedId(productId: string): string {
+  try { return (JSON.parse(localStorage.getItem('elite_saved_ids') ?? '{}'))[productId] ?? ''; } catch { return ''; }
+}
+function persistId(productId: string, uid: string) {
+  try {
+    const all = JSON.parse(localStorage.getItem('elite_saved_ids') ?? '{}');
+    all[productId] = uid;
+    localStorage.setItem('elite_saved_ids', JSON.stringify(all));
+  } catch {}
+}
 
 export default function ProductDetail() {
   const [, params] = useRoute('/products/:id');
@@ -23,6 +34,21 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [playerId, setPlayerId] = useState('');
   const [zoneId, setZoneId] = useState('');
+  const [idSaved, setIdSaved] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      const saved = getSavedId(id);
+      if (saved) { setPlayerId(saved); setIdSaved(true); }
+    }
+  }, [id]);
+
+  const handleSaveId = () => {
+    if (!playerId) return;
+    persistId(id, playerId);
+    setIdSaved(true);
+    toast({ title: '✅ تم حفظ المعرّف', description: 'سيُملأ تلقائياً في المرة القادمة' });
+  };
 
   const handleBuy = async () => {
     if (!user) {
@@ -120,8 +146,22 @@ export default function ProductDetail() {
 
               {hasPlayerId && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t('playerId')} <span className="text-destructive">*</span></label>
-                  <input type="text" value={playerId} onChange={e => setPlayerId(e.target.value)} placeholder="Enter your Player ID" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors" />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">{t('playerId')} <span className="text-destructive">*</span></label>
+                    <button
+                      type="button"
+                      onClick={handleSaveId}
+                      disabled={!playerId}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${idSaved && getSavedId(id) === playerId ? 'text-success bg-success/10' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'} disabled:opacity-40`}
+                    >
+                      {idSaved && getSavedId(id) === playerId ? <BookmarkCheck size={12} /> : <Bookmark size={12} />}
+                      {idSaved && getSavedId(id) === playerId ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ المعرّف' : 'Save ID')}
+                    </button>
+                  </div>
+                  <input type="text" value={playerId} onChange={e => { setPlayerId(e.target.value); setIdSaved(false); }} placeholder={lang === 'ar' ? 'أدخل معرّف اللاعب' : 'Enter your Player ID'} className="w-full px-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors" />
+                  {idSaved && getSavedId(id) === playerId && (
+                    <p className="text-xs text-success mt-1.5">✓ {lang === 'ar' ? 'معرّفك محفوظ وسيُملأ تلقائياً في المرة القادمة' : 'Your ID is saved for next time'}</p>
+                  )}
                 </div>
               )}
 

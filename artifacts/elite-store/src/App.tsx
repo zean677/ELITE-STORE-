@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/i18n";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { AuthProvider } from "@/hooks/use-auth";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -17,6 +18,9 @@ import WalletPage from "@/pages/WalletPage";
 import Deposit from "@/pages/Deposit";
 import Orders from "@/pages/Orders";
 import Notifications from "@/pages/Notifications";
+import Profile from "@/pages/Profile";
+import Support from "@/pages/Support";
+import Terms from "@/pages/Terms";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminPayments from "@/pages/admin/AdminPayments";
@@ -46,6 +50,10 @@ function Router() {
       <Route path="/deposit" component={Deposit} />
       <Route path="/orders" component={Orders} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/support" component={Support} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Terms} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/payments" component={AdminPayments} />
@@ -65,6 +73,7 @@ function App() {
           <AuthProvider>
             <TooltipProvider>
               <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
+                <AnnouncementBanner />
                 <Router />
               </WouterRouter>
               <Toaster />

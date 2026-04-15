@@ -94,7 +94,7 @@ interface LayoutProps {
 
 export function PublicLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
-  const { t, dir } = useLanguage();
+  const { t, dir, lang } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
@@ -154,11 +154,17 @@ export function PublicLayout({ children }: LayoutProps) {
                             <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors">
                               <Home size={14} />{t('dashboard')}
                             </Link>
+                            <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors">
+                              <User size={14} />{lang === 'ar' ? 'الملف الشخصي' : 'Profile'}
+                            </Link>
                             <Link href="/wallet" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors">
                               <Wallet size={14} />{t('wallet')}
                             </Link>
                             <Link href="/orders" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors">
                               <Package size={14} />{t('orders')}
+                            </Link>
+                            <Link href="/support" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors">
+                              <MessageCircle size={14} />{lang === 'ar' ? 'الدعم' : 'Support'}
                             </Link>
                             {user.role === 'admin' && (
                               <Link href="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-background transition-colors text-primary">
@@ -199,6 +205,26 @@ export function PublicLayout({ children }: LayoutProps) {
         )}
       </AnimatePresence>
       <main>{children}</main>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-16 py-8 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+              <span className="text-white font-black text-xs">E</span>
+            </div>
+            <span className="text-sm font-bold text-muted-foreground">ELITE STORE</span>
+          </div>
+          <div className="flex items-center gap-5 text-xs text-muted-foreground">
+            <Link href="/support" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الدعم' : 'Support'}</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الشروط' : 'Terms'}</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الخصوصية' : 'Privacy'}</Link>
+            <a href="https://wa.me/963992718483" target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition-colors">WhatsApp</a>
+          </div>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Elite Store. All rights reserved.</p>
+        </div>
+      </footer>
+
       <FloatingSupport />
     </div>
   );
@@ -219,6 +245,8 @@ export function DashboardLayout({ children }: LayoutProps) {
     { href: '/wallet', icon: Wallet, label: t('wallet') },
     { href: '/deposit', icon: CreditCard, label: t('deposit') },
     { href: '/notifications', icon: Bell, label: t('notifications') },
+    { href: '/profile', icon: User, label: lang === 'ar' ? 'الملف الشخصي' : 'Profile' },
+    { href: '/support', icon: MessageCircle, label: lang === 'ar' ? 'الدعم' : 'Support' },
   ];
 
   const adminNavItems = [
