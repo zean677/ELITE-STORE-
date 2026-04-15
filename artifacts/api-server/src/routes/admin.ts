@@ -342,13 +342,21 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
   }
 
   try {
-    const response = await fetch(`https://api.shams4store.com/client/api/products`, {
-      headers: { "api-token": SHAMS_TOKEN, "Content-Type": "application/json" },
+    const cleanToken = SHAMS_TOKEN.trim().replace(/\n/g, "").replace(/\r/g, "");
+    const url = `https://api.shams4store.com/client/api/products?token=${encodeURIComponent(cleanToken)}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "EliteStore/1.0",
+      },
       signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
-      res.status(502).json({ error: `shams4store API returned ${response.status}` });
+      const body = await response.text().catch(() => "");
+      logger.error({ status: response.status, body }, "shams4store API error");
+      res.status(502).json({ error: `shams4store API returned ${response.status}`, detail: body });
       return;
     }
 
