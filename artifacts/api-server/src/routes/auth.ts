@@ -66,10 +66,11 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 
   const { email, password } = parsed.data;
 
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email));
+  const [byEmail] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  const [byUsername] = !byEmail
+    ? await db.select().from(usersTable).where(eq(usersTable.username, email))
+    : [undefined];
+  const user = byEmail ?? byUsername;
 
   if (!user) {
     res.status(401).json({ error: "Invalid credentials", message: "Email or password incorrect" });
