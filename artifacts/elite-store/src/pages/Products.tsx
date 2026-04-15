@@ -186,13 +186,22 @@ function GameCard({ game, count, onClick, image }: {
         <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full opacity-10"
           style={{ background: game.dot }} />
         {image ? (
-          <img src={image} alt={name} className="h-16 w-auto object-contain drop-shadow-2xl z-10" />
-        ) : (
-          <div className="z-10 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-            style={{ background: `${game.dot}22`, border: `1.5px solid ${game.dot}44` }}>
-            {game.icon}
-          </div>
-        )}
+          <img
+            src={image}
+            alt={name}
+            className="h-16 w-auto object-contain drop-shadow-2xl z-10"
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = 'none';
+              const fallback = el.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div className="z-10 w-16 h-16 rounded-2xl items-center justify-center text-3xl"
+          style={{ background: `${game.dot}22`, border: `1.5px solid ${game.dot}44`, display: image ? 'none' : 'flex' }}>
+          {game.icon}
+        </div>
         {/* Badge */}
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold"
           style={{ background: `${game.dot}22`, border: `1px solid ${game.dot}44`, color: game.dot }}>
@@ -236,15 +245,25 @@ function ProductCard({ product }: { product: any }) {
       <div className={`relative h-28 bg-gradient-to-br ${style.grad} flex items-center justify-center overflow-hidden`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.06),transparent_60%)]" />
         {product.image ? (
-          <img src={product.image} alt={name} className="h-16 w-auto object-contain drop-shadow-2xl z-10" />
-        ) : (
-          <div className="z-10 flex flex-col items-center gap-1">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-              style={{ background: `${style.dot}22`, border: `1px solid ${style.dot}44` }}>
-              {CATEGORY_ICONS[product.category ?? 'general']}
-            </div>
+          <img
+            src={product.image}
+            alt={name}
+            className="h-16 w-auto object-contain drop-shadow-2xl z-10"
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = 'none';
+              const fallback = el.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div className="z-10 flex-col items-center gap-1"
+          style={{ display: product.image ? 'none' : 'flex' }}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+            style={{ background: `${style.dot}22`, border: `1px solid ${style.dot}44` }}>
+            {CATEGORY_ICONS[product.category ?? 'general']}
           </div>
-        )}
+        </div>
         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
           style={{ background: `${style.dot}22`, border: `1px solid ${style.dot}44`, color: style.dot }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: style.dot }} />

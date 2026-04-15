@@ -124,10 +124,10 @@ export function PublicLayout({ children }: LayoutProps) {
 
               {user ? (
                 <>
-                  {/* Wallet Balance */}
-                  <Link href="/wallet" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors">
-                    <Coins size={13} className="text-secondary" />
-                    <span className="text-xs font-bold text-secondary">${parseFloat(user.balance?.toString() ?? '0').toFixed(2)}</span>
+                  {/* Wallet Balance - visible on all sizes */}
+                  <Link href="/wallet" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/15 transition-colors">
+                    <Coins size={12} className="text-green-400 shrink-0" />
+                    <span className="text-xs font-bold text-green-400">${parseFloat(user.balance?.toString() ?? '0').toFixed(2)}</span>
                   </Link>
                   <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
                     <Bell size={18} className="text-muted-foreground" />
