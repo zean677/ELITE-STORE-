@@ -77,10 +77,9 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="mt-4 p-3 bg-background rounded-xl border border-border text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground text-xs">Demo credentials:</p>
-            <p>Admin: admin@elitestore.com / admin123</p>
-            <p>User: user@elitestore.com / user123</p>
+          <div className="mt-4 p-3 bg-background rounded-xl border border-border text-xs text-muted-foreground space-y-1" dir="rtl">
+            <p className="font-medium text-foreground text-xs">🔑 حساب تجريبي:</p>
+            <p>user@elitestore.com / user123</p>
           </div>
         </div>
       </motion.div>

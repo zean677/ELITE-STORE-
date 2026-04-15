@@ -5,6 +5,7 @@ import { useGetWallet, useGetWalletHistory } from '@workspace/api-client-react';
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLanguage } from '@/i18n';
+import { useSettings } from '@/hooks/use-settings';
 import { Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, PlusCircle, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
 
 const typeConfig: Record<string, { icon: any; color: string; sign: string }> = {
@@ -17,6 +18,7 @@ const tabOptions = ['الكل', 'طلبات', 'مسترجع الطلبات'];
 
 export default function WalletPage() {
   const { lang } = useLanguage();
+  const { sypRate: SYP_RATE } = useSettings();
   const { data: wallet } = useGetWallet();
   const { data: history } = useGetWalletHistory({ page: 1, limit: 100 });
   const [tab, setTab] = useState(0);
@@ -35,8 +37,6 @@ export default function WalletPage() {
 
   const currentBalance = parseFloat(wallet?.balance?.toString() ?? '0');
   const debitBalance = 0;
-
-  const SYP_RATE = 13000;
 
   const stats = [
     {

@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useLanguage } from '@/i18n';
 import { Package, Search } from 'lucide-react';
+import { useSettings } from '@/hooks/use-settings';
 
 const STATUS_TABS = [
   { key: '', labelAr: 'الكل', labelEn: 'All' },
@@ -15,10 +16,9 @@ const STATUS_TABS = [
   { key: 'failed', labelAr: 'مرفوض', labelEn: 'Rejected' },
 ];
 
-const SYP_RATE = 13000;
-
 export default function Orders() {
   const { lang } = useLanguage();
+  const { sypRate: SYP_RATE } = useSettings();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');

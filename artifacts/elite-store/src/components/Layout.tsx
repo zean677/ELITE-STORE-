@@ -11,6 +11,7 @@ import {
   ChevronDown, Menu, X, Shield, BarChart2, Users, CreditCard,
   LogOut, Layers, ChevronRight, MessageCircle, Users2, Coins
 } from 'lucide-react';
+import { useSettings } from '@/hooks/use-settings';
 
 const WHATSAPP_NUMBER = '963992718483';
 const GROUP_LINK = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
@@ -95,11 +96,13 @@ interface LayoutProps {
 export function PublicLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { t, dir, lang } = useLanguage();
+  const { sypRate } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
   const unreadCount = (notifications || []).filter(n => !n.isRead).length;
   const [location] = useLocation();
+  const userBalanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * sypRate).toFixed(0) : '0';
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={dir}>
@@ -127,7 +130,8 @@ export function PublicLayout({ children }: LayoutProps) {
                   {/* Wallet Balance - visible on all sizes */}
                   <Link href="/wallet" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/15 transition-colors">
                     <Coins size={12} className="text-green-400 shrink-0" />
-                    <span className="text-xs font-bold text-green-400">${parseFloat(user.balance?.toString() ?? '0').toFixed(2)}</span>
+                    <span className="text-xs font-bold text-green-400">{userBalanceSYP}</span>
+                    <span className="text-[10px] text-green-400/80">ل.س</span>
                   </Link>
                   <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
                     <Bell size={18} className="text-muted-foreground" />
@@ -233,6 +237,7 @@ export function PublicLayout({ children }: LayoutProps) {
 export function DashboardLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { t, dir, lang } = useLanguage();
+  const { sypRate } = useSettings();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
@@ -260,7 +265,7 @@ export function DashboardLayout({ children }: LayoutProps) {
 
   const isAdmin = user?.role === 'admin';
 
-  const balanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * 13000).toFixed(2) : '0.00';
+  const balanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * sypRate).toFixed(0) : '0';
 
   const mobileBottomNav = [
     { href: '/dashboard', icon: Shield, color: '#22c55e', label: lang === 'ar' ? 'حماية' : 'Security' },

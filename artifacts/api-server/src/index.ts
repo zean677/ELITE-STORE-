@@ -52,6 +52,29 @@ async function seedAdminUser() {
   }
 }
 
+async function seedDemoUser() {
+  try {
+    const [existing] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, "user@elitestore.com"));
+    if (!existing) {
+      const passwordHash = await bcrypt.hash("user123", 10);
+      await db.insert(usersTable).values({
+        username: "demo_user",
+        email: "user@elitestore.com",
+        passwordHash,
+        role: "user",
+        balance: "0",
+        isSuspended: false,
+      });
+      logger.info("Demo user created");
+    }
+  } catch (err) {
+    logger.warn({ err }, "Could not seed demo user");
+  }
+}
+
 async function seedDemoProducts() {
   try {
     const [{ total }] = await db.select({ total: count() }).from(productsTable);
@@ -161,6 +184,7 @@ async function seedDemoProducts() {
 }
 
 seedAdminUser()
+  .then(() => seedDemoUser())
   .then(() => seedDemoProducts())
   .then(() => {
     app.listen(port, (err) => {
