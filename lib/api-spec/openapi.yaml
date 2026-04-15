@@ -583,6 +583,94 @@ paths:
               schema:
                 $ref: "#/components/schemas/SyncResult"
 
+  /admin/products/create:
+    post:
+      operationId: createProduct
+      tags: [admin]
+      summary: Admin - Create a product manually
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/products/{id}:
+    put:
+      operationId: updateProduct
+      tags: [admin]
+      summary: Admin - Update a product
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductBody"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteProduct
+      tags: [admin]
+      summary: Admin - Delete a product
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/revenue-chart:
     get:
       operationId: getRevenueChart
@@ -792,6 +880,65 @@ components:
         - total
         - page
         - limit
+
+    CreateProductBody:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nameAr:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        priceUsd:
+          type: number
+        category:
+          type: string
+          enum: [mobile_games, pc_games, gift_cards, services, general]
+        provider:
+          type: string
+        providerProductId:
+          type: string
+        requiredFields:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        profitMargin:
+          type: number
+      required:
+        - name
+        - priceUsd
+        - category
+        - provider
+
+    UpdateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameAr:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        priceUsd:
+          type: number
+        category:
+          type: string
+          enum: [mobile_games, pc_games, gift_cards, services, general]
+        status:
+          type: string
+          enum: [active, inactive]
+        profitMargin:
+          type: number
 
     Product:
       type: object

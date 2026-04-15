@@ -79,6 +79,70 @@ export interface WalletHistoryResponse {
   limit: number;
 }
 
+export type CreateProductBodyCategory =
+  (typeof CreateProductBodyCategory)[keyof typeof CreateProductBodyCategory];
+
+export const CreateProductBodyCategory = {
+  mobile_games: "mobile_games",
+  pc_games: "pc_games",
+  gift_cards: "gift_cards",
+  services: "services",
+  general: "general",
+} as const;
+
+export type CreateProductBodyStatus =
+  (typeof CreateProductBodyStatus)[keyof typeof CreateProductBodyStatus];
+
+export const CreateProductBodyStatus = {
+  active: "active",
+  inactive: "inactive",
+} as const;
+
+export interface CreateProductBody {
+  id?: string;
+  name: string;
+  nameAr?: string;
+  description?: string;
+  image?: string;
+  priceUsd: number;
+  category: CreateProductBodyCategory;
+  provider: string;
+  providerProductId?: string;
+  requiredFields?: string[];
+  status?: CreateProductBodyStatus;
+  profitMargin?: number;
+}
+
+export type UpdateProductBodyCategory =
+  (typeof UpdateProductBodyCategory)[keyof typeof UpdateProductBodyCategory];
+
+export const UpdateProductBodyCategory = {
+  mobile_games: "mobile_games",
+  pc_games: "pc_games",
+  gift_cards: "gift_cards",
+  services: "services",
+  general: "general",
+} as const;
+
+export type UpdateProductBodyStatus =
+  (typeof UpdateProductBodyStatus)[keyof typeof UpdateProductBodyStatus];
+
+export const UpdateProductBodyStatus = {
+  active: "active",
+  inactive: "inactive",
+} as const;
+
+export interface UpdateProductBody {
+  name?: string;
+  nameAr?: string;
+  description?: string;
+  image?: string;
+  priceUsd?: number;
+  category?: UpdateProductBodyCategory;
+  status?: UpdateProductBodyStatus;
+  profitMargin?: number;
+}
+
 export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus];
 
 export const ProductStatus = {
@@ -350,6 +414,10 @@ export type GetAdminUsersParams = {
   page?: number;
   limit?: number;
   search?: string;
+};
+
+export type DeleteProduct200 = {
+  success?: boolean;
 };
 
 export type GetRevenueChartParams = {

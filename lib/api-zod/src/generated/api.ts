@@ -533,6 +533,76 @@ export const SyncProductsResponse = zod.object({
 });
 
 /**
+ * @summary Admin - Create a product manually
+ */
+export const CreateProductBody = zod.object({
+  id: zod.string().optional(),
+  name: zod.string(),
+  nameAr: zod.string().optional(),
+  description: zod.string().optional(),
+  image: zod.string().optional(),
+  priceUsd: zod.number(),
+  category: zod.enum([
+    "mobile_games",
+    "pc_games",
+    "gift_cards",
+    "services",
+    "general",
+  ]),
+  provider: zod.string(),
+  providerProductId: zod.string().optional(),
+  requiredFields: zod.array(zod.string()).optional(),
+  status: zod.enum(["active", "inactive"]).optional(),
+  profitMargin: zod.number().optional(),
+});
+
+/**
+ * @summary Admin - Update a product
+ */
+export const UpdateProductParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateProductBody = zod.object({
+  name: zod.string().optional(),
+  nameAr: zod.string().optional(),
+  description: zod.string().optional(),
+  image: zod.string().optional(),
+  priceUsd: zod.number().optional(),
+  category: zod
+    .enum(["mobile_games", "pc_games", "gift_cards", "services", "general"])
+    .optional(),
+  status: zod.enum(["active", "inactive"]).optional(),
+  profitMargin: zod.number().optional(),
+});
+
+export const UpdateProductResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  nameAr: zod.string().optional(),
+  description: zod.string().optional(),
+  image: zod.string().optional(),
+  priceUsd: zod.number(),
+  category: zod.string(),
+  provider: zod.string(),
+  providerProductId: zod.string().optional(),
+  requiredFields: zod.array(zod.string()).optional(),
+  status: zod.enum(["active", "inactive"]),
+  profitMargin: zod.number().optional(),
+});
+
+/**
+ * @summary Admin - Delete a product
+ */
+export const DeleteProductParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const DeleteProductResponse = zod.object({
+  success: zod.boolean().optional(),
+});
+
+/**
  * @summary Admin - Revenue chart data
  */
 export const getRevenueChartQueryPeriodDefault = `30d`;

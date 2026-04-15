@@ -375,4 +375,86 @@ router.get("/admin/revenue-chart", requireAdmin, async (req: AuthRequest, res): 
   })));
 });
 
+router.post("/admin/products/create", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
+  const { name, nameAr, description, image, priceUsd, category, provider, providerProductId, requiredFields, status, profitMargin } = req.body;
+
+  if (!name || priceUsd === undefined || !category || !provider) {
+    res.status(400).json({ error: "name, priceUsd, category, and provider are required" });
+    return;
+  }
+
+  const id = uuidv4();
+  const [product] = await db
+    .insert(productsTable)
+    .values({
+      id,
+      name,
+      nameAr: nameAr ?? null,
+      description: description ?? null,
+      image: image ?? null,
+      priceUsd: String(priceUsd),
+      category: category ?? "general",
+      provider: provider ?? "manual",
+      providerProductId: providerProductId ?? id,
+      requiredFields: requiredFields ?? [],
+      status: status ?? "active",
+      profitMargin: String(profitMargin ?? 10),
+    })
+    .returning();
+
+  res.status(201).json({
+    ...product,
+    priceUsd: parseFloat(product.priceUsd ?? "0"),
+    profitMargin: parseFloat(product.profitMargin ?? "10"),
+    requiredFields: product.requiredFields ?? [],
+  });
+});
+
+router.put("/admin/products/:id", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
+  const productId = req.params.id;
+  const { name, nameAr, description, image, priceUsd, category, status, profitMargin } = req.body;
+
+  const [existing] = await db.select().from(productsTable).where(eq(productsTable.id, productId));
+  if (!existing) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (name !== undefined) updateData.name = name;
+  if (nameAr !== undefined) updateData.nameAr = nameAr;
+  if (description !== undefined) updateData.description = description;
+  if (image !== undefined) updateData.image = image;
+  if (priceUsd !== undefined) updateData.priceUsd = String(priceUsd);
+  if (category !== undefined) updateData.category = category;
+  if (status !== undefined) updateData.status = status;
+  if (profitMargin !== undefined) updateData.profitMargin = String(profitMargin);
+
+  const [updated] = await db
+    .update(productsTable)
+    .set(updateData)
+    .where(eq(productsTable.id, productId))
+    .returning();
+
+  res.json({
+    ...updated,
+    priceUsd: parseFloat(updated.priceUsd ?? "0"),
+    profitMargin: parseFloat(updated.profitMargin ?? "10"),
+    requiredFields: updated.requiredFields ?? [],
+  });
+});
+
+router.delete("/admin/products/:id", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
+  const productId = req.params.id;
+
+  const [existing] = await db.select().from(productsTable).where(eq(productsTable.id, productId));
+  if (!existing) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  await db.delete(productsTable).where(eq(productsTable.id, productId));
+  res.json({ success: true });
+});
+
 export default router;
