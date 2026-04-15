@@ -3,13 +3,16 @@ import { Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PublicLayout } from '@/components/Layout';
 import { useLanguage } from '@/i18n';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Zap, Shield, Clock, ChevronLeft, Star } from 'lucide-react';
+
+const BASE = import.meta.env.BASE_URL?.replace(/\/$/, '') || '';
 
 const WA_GROUP = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
 const WA_SUPPORT = 'https://wa.me/963992718483';
 
-// ─── Category definitions ─────────────────────────────────────
-const CATEGORIES = [
+// ─── Static fallback categories (used if API fails) ──────────
+const CATEGORIES_FALLBACK = [
   {
     id: 'games',
     nameAr: 'الألعاب',
@@ -260,8 +263,36 @@ function WhatsAppPopup() {
   );
 }
 
+// ─── Category display type ─────────────────────────────────────
+type CatDisplay = {
+  id: string | number;
+  nameAr: string;
+  nameEn: string;
+  href: string;
+  color: string;
+  bg: string;
+  icons: { img: string; label: string; bg: string }[];
+};
+
+function apiToCat(c: any): CatDisplay {
+  return {
+    id: c.id,
+    nameAr: c.nameAr,
+    nameEn: c.nameEn,
+    href: c.href,
+    color: c.color,
+    bg: c.bgGradient,
+    icons: [
+      { img: c.icon1 || '', label: c.iconLabel1 || '', bg: c.color },
+      { img: c.icon2 || '', label: c.iconLabel2 || '', bg: c.color },
+      { img: c.icon3 || '', label: c.iconLabel3 || '', bg: c.color },
+      { img: c.icon4 || '', label: c.iconLabel4 || '', bg: c.color },
+    ],
+  };
+}
+
 // ─── Category Card ─────────────────────────────────────────────
-function CategoryCard({ cat, index }: { cat: typeof CATEGORIES[0]; index: number }) {
+function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
   const [imgErrors, setImgErrors] = useState<Set<number>>(new Set());
 
   return (
@@ -498,6 +529,20 @@ function StatsBar() {
 export default function Home() {
   const { lang } = useLanguage();
 
+  const { data: apiCats } = useQuery({
+    queryKey: ['public-categories'],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/categories`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const displayCats: CatDisplay[] = apiCats && apiCats.length > 0
+    ? apiCats.map(apiToCat)
+    : CATEGORIES_FALLBACK as unknown as CatDisplay[];
+
   return (
     <PublicLayout>
       <WhatsAppPopup />
@@ -522,7 +567,7 @@ export default function Home() {
 
         {/* 3-column category grid */}
         <div className="grid grid-cols-3 gap-2.5 mb-6">
-          {CATEGORIES.map((cat, i) => (
+          {displayCats.map((cat, i) => (
             <CategoryCard key={cat.id} cat={cat} index={i} />
           ))}
         </div>

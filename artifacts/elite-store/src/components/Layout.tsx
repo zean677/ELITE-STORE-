@@ -296,11 +296,12 @@ export function DashboardLayout({ children }: LayoutProps) {
   ];
 
   const adminNavItems = [
-    { href: '/admin', icon: BarChart2, label: 'Analytics' },
-    { href: '/admin/orders', icon: Package, label: 'All Orders' },
-    { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
-    { href: '/admin/users', icon: Users, label: 'Users' },
-    { href: '/admin/products', icon: Layers, label: 'Products' },
+    { href: '/admin', icon: BarChart2, label: 'الإحصائيات' },
+    { href: '/admin/orders', icon: Package, label: 'جميع الطلبات' },
+    { href: '/admin/payments', icon: CreditCard, label: 'المدفوعات' },
+    { href: '/admin/users', icon: Users, label: 'المستخدمون' },
+    { href: '/admin/products', icon: Layers, label: 'المنتجات' },
+    { href: '/admin/categories', icon: ChevronRight, label: 'إدارة الفئات' },
     { href: '/admin/settings', icon: Settings, label: 'الإعدادات' },
   ];
 

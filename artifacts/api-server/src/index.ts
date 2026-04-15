@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { db, usersTable, productsTable } from "@workspace/db";
+import { db, usersTable, productsTable, categoriesTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -183,9 +183,37 @@ async function seedDemoProducts() {
   }
 }
 
+async function seedDefaultCategories() {
+  try {
+    const [{ total }] = await db.select({ total: count() }).from(categoriesTable);
+    if (Number(total) > 0) return;
+
+    const defaults = [
+      { nameAr: "الألعاب", nameEn: "Games", href: "/products?category=mobile_games", color: "#7c3aed", bgGradient: "linear-gradient(145deg, #1a0040, #2d0080)", icon1: "https://www.google.com/s2/favicons?domain=pubg.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=garena.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=mobilelegends.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=clashofclans.com&sz=64", iconLabel1: "PUBG", iconLabel2: "FF", iconLabel3: "ML", iconLabel4: "CoC", sortOrder: 1 },
+      { nameAr: "التطبيقات", nameEn: "Apps", href: "/products?category=services", color: "#22c55e", bgGradient: "linear-gradient(145deg, #002010, #004020)", icon1: "https://www.google.com/s2/favicons?domain=netflix.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=spotify.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=youtube.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64", iconLabel1: "Netflix", iconLabel2: "Spotify", iconLabel3: "YouTube", iconLabel4: "ChatGPT", sortOrder: 2 },
+      { nameAr: "السوشيال ميديا", nameEn: "Social Media", href: "/products?category=general&q=social", color: "#3b82f6", bgGradient: "linear-gradient(145deg, #001030, #002060)", icon1: "https://www.google.com/s2/favicons?domain=telegram.org&sz=64", icon2: "https://www.google.com/s2/favicons?domain=facebook.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=tiktok.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=instagram.com&sz=64", iconLabel1: "TG", iconLabel2: "FB", iconLabel3: "TT", iconLabel4: "IG", sortOrder: 3 },
+      { nameAr: "الرصيد والاتصالات", nameEn: "Telecom", href: "/products?category=general&q=telecom", color: "#ef4444", bgGradient: "linear-gradient(145deg, #200010, #400020)", icon1: "https://www.google.com/s2/favicons?domain=syriatel.com.sy&sz=64", icon2: "https://www.google.com/s2/favicons?domain=mtn.sy&sz=64", icon3: "https://www.google.com/s2/favicons?domain=zain.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=vodafone.com&sz=64", iconLabel1: "Syriatel", iconLabel2: "MTN", iconLabel3: "Zain", iconLabel4: "VF", sortOrder: 4 },
+      { nameAr: "البطاقات", nameEn: "Gift Cards", href: "/products?category=gift_cards", color: "#f59e0b", bgGradient: "linear-gradient(145deg, #201000, #402000)", icon1: "https://www.google.com/s2/favicons?domain=play.google.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=apple.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=amazon.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=playstation.com&sz=64", iconLabel1: "Google", iconLabel2: "iTunes", iconLabel3: "Amazon", iconLabel4: "PSN", sortOrder: 5 },
+      { nameAr: "العملات الرقمية", nameEn: "Crypto", href: "/products?category=general&q=crypto", color: "#f59e0b", bgGradient: "linear-gradient(145deg, #201500, #403000)", icon1: "https://www.google.com/s2/favicons?domain=tether.to&sz=64", icon2: "https://www.google.com/s2/favicons?domain=binance.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=payeer.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=perfectmoney.com&sz=64", iconLabel1: "USDT", iconLabel2: "BNB", iconLabel3: "Payeer", iconLabel4: "PM", sortOrder: 6 },
+      { nameAr: "ألعاب الكمبيوتر", nameEn: "PC Games", href: "/products?category=pc_games", color: "#06b6d4", bgGradient: "linear-gradient(145deg, #001520, #002d40)", icon1: "https://www.google.com/s2/favicons?domain=store.steampowered.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=playvalorant.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=leagueoflegends.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=xbox.com&sz=64", iconLabel1: "Steam", iconLabel2: "Valorant", iconLabel3: "LoL", iconLabel4: "Xbox", sortOrder: 7 },
+      { nameAr: "الذكاء الاصطناعي", nameEn: "AI Tools", href: "/products?category=services&q=ai", color: "#a78bfa", bgGradient: "linear-gradient(145deg, #100020, #200040)", icon1: "https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=midjourney.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64", iconLabel1: "ChatGPT", iconLabel2: "MJ", iconLabel3: "Gemini", iconLabel4: "Claude", sortOrder: 8 },
+      { nameAr: "الاشتراكات", nameEn: "Subscriptions", href: "/products?category=services&q=premium", color: "#8b5cf6", bgGradient: "linear-gradient(145deg, #0f0020, #1f0040)", icon1: "https://www.google.com/s2/favicons?domain=netflix.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=spotify.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=canva.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=adobe.com&sz=64", iconLabel1: "Netflix", iconLabel2: "Spotify", iconLabel3: "Canva", iconLabel4: "Adobe", sortOrder: 9 },
+      { nameAr: "برامج التصميم", nameEn: "Design Tools", href: "/products?category=services&q=design", color: "#f472b6", bgGradient: "linear-gradient(145deg, #200010, #3f0020)", icon1: "https://www.google.com/s2/favicons?domain=canva.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=adobe.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=figma.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=capcut.com&sz=64", iconLabel1: "Canva", iconLabel2: "Adobe", iconLabel3: "Figma", iconLabel4: "CapCut", sortOrder: 10 },
+      { nameAr: "الأرقام", nameEn: "Numbers", href: "/products?category=general&q=numbers", color: "#34d399", bgGradient: "linear-gradient(145deg, #001510, #003020)", icon1: "https://www.google.com/s2/favicons?domain=whatsapp.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=telegram.org&sz=64", icon3: "https://www.google.com/s2/favicons?domain=snapchat.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=twitter.com&sz=64", iconLabel1: "WA", iconLabel2: "TG", iconLabel3: "SC", iconLabel4: "X", sortOrder: 11 },
+      { nameAr: "الحسابات الجامعة", nameEn: "Wholesale", href: "/products?category=general&q=accounts", color: "#fb923c", bgGradient: "linear-gradient(145deg, #201005, #402010)", icon1: "https://www.google.com/s2/favicons?domain=facebook.com&sz=64", icon2: "https://www.google.com/s2/favicons?domain=instagram.com&sz=64", icon3: "https://www.google.com/s2/favicons?domain=tiktok.com&sz=64", icon4: "https://www.google.com/s2/favicons?domain=youtube.com&sz=64", iconLabel1: "FB", iconLabel2: "IG", iconLabel3: "TT", iconLabel4: "YT", sortOrder: 12 },
+    ];
+
+    await db.insert(categoriesTable).values(defaults.map(d => ({ ...d, isActive: true })));
+    logger.info({ count: defaults.length }, "Default categories seeded");
+  } catch (err) {
+    logger.warn({ err }, "Could not seed default categories");
+  }
+}
+
 seedAdminUser()
   .then(() => seedDemoUser())
   .then(() => seedDemoProducts())
+  .then(() => seedDefaultCategories())
   .then(() => {
     app.listen(port, (err) => {
       if (err) {
