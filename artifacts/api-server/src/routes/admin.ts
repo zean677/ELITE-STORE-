@@ -342,13 +342,12 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
   }
 
   try {
-    const cleanToken = SHAMS_TOKEN.trim().replace(/\n/g, "").replace(/\r/g, "");
-    const url = `https://api.shams4store.com/client/api/products?token=${encodeURIComponent(cleanToken)}`;
-    const response = await fetch(url, {
+    const cleanToken = SHAMS_TOKEN.trim();
+    const response = await fetch(`https://api.shams4store.com/client/api/products`, {
       method: "GET",
       headers: {
+        "api-token": cleanToken,
         "Accept": "application/json",
-        "User-Agent": "EliteStore/1.0",
       },
       signal: AbortSignal.timeout(30000),
     });
@@ -370,13 +369,23 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
       available: boolean;
       product_type: string;
       parent_id: number;
+      qty_values?: { min?: number; max?: number } | null;
     }> = await response.json();
 
     for (const p of products) {
       try {
         const productId = `shams_${p.id}`;
         const category = mapCategory(p.category_name);
-        const price = typeof p.price === "number" ? p.price : parseFloat(String(p.price));
+        const unitPrice = typeof p.price === "number" ? p.price : parseFloat(String(p.price));
+        const qtyMin = p.qty_values?.min ?? null;
+        const qtyMax = p.qty_values?.max ?? null;
+
+        // For "amount" type, effective price = unit_price * min_qty
+        // For package/stock types, price is fixed per product
+        const effectivePrice =
+          p.product_type === "amount" && qtyMin && qtyMin > 0
+            ? unitPrice * qtyMin
+            : unitPrice;
 
         await db
           .insert(productsTable)
@@ -388,18 +397,26 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
             category,
             provider: "shams4store",
             providerProductId: String(p.id),
-            priceUsd: String(price),
+            priceUsd: String(effectivePrice),
+            unitPriceUsd: String(unitPrice),
             requiredFields: p.params ?? [],
             status: p.available ? "active" : "inactive",
             profitMargin: "10",
+            productType: p.product_type ?? "package",
+            qtyMin: qtyMin !== null ? String(qtyMin) : null,
+            qtyMax: qtyMax !== null ? String(qtyMax) : null,
           })
           .onConflictDoUpdate({
             target: productsTable.id,
             set: {
               name: p.name,
-              priceUsd: String(price),
+              priceUsd: String(effectivePrice),
+              unitPriceUsd: String(unitPrice),
               status: p.available ? "active" : "inactive",
               requiredFields: p.params ?? [],
+              productType: p.product_type ?? "package",
+              qtyMin: qtyMin !== null ? String(qtyMin) : null,
+              qtyMax: qtyMax !== null ? String(qtyMax) : null,
             },
           });
         synced++;

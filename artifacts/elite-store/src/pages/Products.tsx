@@ -115,9 +115,13 @@ function ProductCard({ product }: { product: any }) {
         <h3 className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{name}</h3>
         <div className="flex items-center justify-between mt-3">
           <div>
-            <span className="text-xs text-muted-foreground block">السعر</span>
+            <span className="text-xs text-muted-foreground block">
+              {product.productType === 'amount' ? 'ابتداءً من' : 'السعر'}
+            </span>
             <span className="font-black text-sm" style={{ color: style.dot }}>
-              {formatPrice(product.priceUsd)}
+              {parseFloat(product.priceUsd ?? '0') === 0
+                ? <span className="text-muted-foreground text-xs">يُحدَّد عند الطلب</span>
+                : formatPrice(product.priceUsd)}
             </span>
           </div>
           <Link
