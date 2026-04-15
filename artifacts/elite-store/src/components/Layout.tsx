@@ -10,8 +10,84 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, ShoppingBag, Package, Wallet, Bell, User, Settings,
   ChevronDown, Menu, X, Shield, BarChart2, Users, CreditCard,
-  LogOut, Layers, ChevronRight
+  LogOut, Layers, ChevronRight, MessageCircle, Users2
 } from 'lucide-react';
+
+const WHATSAPP_NUMBER = '963992718483';
+const GROUP_LINK = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
+
+function FloatingSupport() {
+  const [open, setOpen] = useState(false);
+  const { lang } = useLanguage();
+
+  return (
+    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-2">
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Group Button */}
+            <motion.a
+              href={GROUP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -20, scale: 0.8 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg shadow-black/30 hover:scale-105 active:scale-95 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #128C7E, #075E54)' }}
+            >
+              <Users2 size={16} />
+              {lang === 'ar' ? 'غروب الموقع' : 'Community Group'}
+            </motion.a>
+
+            {/* Support Button */}
+            <motion.a
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -20, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg shadow-black/30 hover:scale-105 active:scale-95 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)' }}
+            >
+              <MessageCircle size={16} />
+              {lang === 'ar' ? 'تواصل مع الدعم' : 'Support'}
+            </motion.a>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main Toggle Button */}
+      <motion.button
+        onClick={() => setOpen(o => !o)}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.93 }}
+        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-black/40 transition-all"
+        style={{
+          background: open
+            ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+            : 'linear-gradient(135deg, #25D366, #128C7E)',
+          boxShadow: open ? '0 8px 24px rgba(239,68,68,0.4)' : '0 8px 24px rgba(37,211,102,0.4)',
+        }}
+      >
+        <AnimatePresence mode="wait">
+          {open ? (
+            <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+              <X size={22} />
+            </motion.div>
+          ) : (
+            <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+              <MessageCircle size={22} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
+    </div>
+  );
+}
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -119,6 +195,7 @@ export function PublicLayout({ children }: LayoutProps) {
         )}
       </AnimatePresence>
       <main>{children}</main>
+      <FloatingSupport />
     </div>
   );
 }
@@ -235,6 +312,7 @@ export function DashboardLayout({ children }: LayoutProps) {
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
+      <FloatingSupport />
     </div>
   );
 }
