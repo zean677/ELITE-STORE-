@@ -29,14 +29,23 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 ## Elite Store Project
 
 ### Overview
-A digital products store and game top-up platform with dark gaming UI.
+A professional Arabic-first digital products store and game top-up platform. Dark gaming + fintech style. Multi-language, multi-currency.
+
+### Design System
+- Primary: #6C5CE7 (Elite Purple), Secondary: #00CEC9 (Neon Cyan), Accent: #FD79A8
+- Background: #0F172A, Cards: #111827, Border: #1F2937
+- CSS classes: `.glass-card`, `.glass-dark`, `.neon-text`, `.neon-text-cyan`, `.neon-border`, `.gradient-btn-primary`, `.shine-card`, `.pulse-glow`, `.ticker-text`
 
 ### Features
 - Multi-language (AR/EN), multi-currency (USD/SYP/EUR)
+- 12 category cards on home page (3-column grid, 2×2 icon grid per card, VIP badge, gradient overlays) — matches shams4store.com style
+- Animated announcement ticker at top of every page (gradient purple-cyan)
+- Stats bar on home page (24/7, 100%, 500+, 10K+)
 - Products synced from shams4store API (`SHAMS4STORE_API_TOKEN` env var, shared environment)
 - Full admin panel at `/admin` (login: ZEAN.23 / ZEAN333ZEAN#)
-- Dark gaming UI with category-based color system
-- Wallet system, Syriatel Cash + ShamCash payments (planned)
+- Wallet system: Syriatel Cash (14816688) + ShamCash (wallet: zean677, ID: 5649dd63431812890980008b5b1c3d53)
+- Dynamic SYP rate from admin settings API (use-settings.ts hook, staleTime 5min)
+- Orders page with Arabic status tabs + date filter + search
 
 ### shams4store API
 - Base URL: `https://api.shams4store.com/client/api/`

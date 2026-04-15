@@ -3,25 +3,95 @@ import { Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PublicLayout } from '@/components/Layout';
 import { useLanguage } from '@/i18n';
-import { X, ChevronLeft, Search, Zap, Shield, Clock } from 'lucide-react';
+import { Search, Zap, Shield, Clock, ChevronLeft, Star } from 'lucide-react';
 
 const WA_GROUP = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
+const WA_SUPPORT = 'https://wa.me/963992718483';
 
 // ─── Category definitions ─────────────────────────────────────
-const SECTIONS = [
+const CATEGORIES = [
   {
-    id: 'mobile_games',
+    id: 'games',
     nameAr: 'الألعاب',
     nameEn: 'Games',
     href: '/products?category=mobile_games',
-    theme: 'from-[#1a0a2e] to-[#2d1b4e]',
-    border: 'border-[#7c3aed]/40',
-    glow: '#7c3aed',
-    logos: [
-      { label: 'PUBG', bg: '#f59e0b', emoji: '🟡', img: '' },
-      { label: 'FF',   bg: '#f97316', emoji: '🔥', img: '' },
-      { label: 'ML',   bg: '#dc2626', emoji: '🏆', img: '' },
-      { label: 'CoC',  bg: '#3b82f6', emoji: '⚔️', img: '' },
+    color: '#7c3aed',
+    bg: 'linear-gradient(145deg, #1a0040, #2d0080)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=pubg.com&sz=64', label: 'PUBG', bg: '#f59e0b' },
+      { img: 'https://www.google.com/s2/favicons?domain=garena.com&sz=64', label: 'FF', bg: '#f97316' },
+      { img: 'https://www.google.com/s2/favicons?domain=mobilelegends.com&sz=64', label: 'ML', bg: '#dc2626' },
+      { img: 'https://www.google.com/s2/favicons?domain=clash.com&sz=64', label: 'CoC', bg: '#3b82f6' },
+    ],
+  },
+  {
+    id: 'apps',
+    nameAr: 'التطبيقات',
+    nameEn: 'Apps',
+    href: '/products?category=services',
+    color: '#22c55e',
+    bg: 'linear-gradient(145deg, #002010, #004020)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=netflix.com&sz=64', label: 'Netflix', bg: '#e50914' },
+      { img: 'https://www.google.com/s2/favicons?domain=spotify.com&sz=64', label: 'Spotify', bg: '#1db954' },
+      { img: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=64', label: 'YouTube', bg: '#ff0000' },
+      { img: 'https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64', label: 'ChatGPT', bg: '#10a37f' },
+    ],
+  },
+  {
+    id: 'social',
+    nameAr: 'السوشيال ميديا',
+    nameEn: 'Social Media',
+    href: '/products?category=general&q=social',
+    color: '#3b82f6',
+    bg: 'linear-gradient(145deg, #001030, #002060)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=telegram.org&sz=64', label: 'TG', bg: '#2aabee' },
+      { img: 'https://www.google.com/s2/favicons?domain=facebook.com&sz=64', label: 'FB', bg: '#1877f2' },
+      { img: 'https://www.google.com/s2/favicons?domain=tiktok.com&sz=64', label: 'TT', bg: '#000000' },
+      { img: 'https://www.google.com/s2/favicons?domain=instagram.com&sz=64', label: 'IG', bg: '#e1306c' },
+    ],
+  },
+  {
+    id: 'telecom',
+    nameAr: 'الرصيد والاتصالات',
+    nameEn: 'Telecom',
+    href: '/products?category=general&q=telecom',
+    color: '#ef4444',
+    bg: 'linear-gradient(145deg, #200010, #400020)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=syriatel.com.sy&sz=64', label: 'Syriatel', bg: '#dc2626' },
+      { img: 'https://www.google.com/s2/favicons?domain=mtn.sy&sz=64', label: 'MTN', bg: '#f59e0b' },
+      { img: 'https://www.google.com/s2/favicons?domain=zain.com&sz=64', label: 'Zain', bg: '#a855f7' },
+      { img: 'https://www.google.com/s2/favicons?domain=vodafone.com&sz=64', label: 'VF', bg: '#ef4444' },
+    ],
+  },
+  {
+    id: 'gift_cards',
+    nameAr: 'البطاقات',
+    nameEn: 'Gift Cards',
+    href: '/products?category=gift_cards',
+    color: '#f59e0b',
+    bg: 'linear-gradient(145deg, #201000, #402000)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=play.google.com&sz=64', label: 'Google', bg: '#4285f4' },
+      { img: 'https://www.google.com/s2/favicons?domain=apple.com&sz=64', label: 'iTunes', bg: '#fc3158' },
+      { img: 'https://www.google.com/s2/favicons?domain=amazon.com&sz=64', label: 'Amazon', bg: '#ff9900' },
+      { img: 'https://www.google.com/s2/favicons?domain=playstation.com&sz=64', label: 'PSN', bg: '#00439c' },
+    ],
+  },
+  {
+    id: 'crypto',
+    nameAr: 'العملات الرقمية',
+    nameEn: 'Crypto',
+    href: '/products?category=general&q=crypto',
+    color: '#f59e0b',
+    bg: 'linear-gradient(145deg, #201500, #403000)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=tether.to&sz=64', label: 'USDT', bg: '#26a17b' },
+      { img: 'https://www.google.com/s2/favicons?domain=binance.com&sz=64', label: 'BNB', bg: '#f3ba2f' },
+      { img: 'https://www.google.com/s2/favicons?domain=payeer.com&sz=64', label: 'Payeer', bg: '#1e88e5' },
+      { img: 'https://www.google.com/s2/favicons?domain=perfectmoney.com&sz=64', label: 'PM', bg: '#c62828' },
     ],
   },
   {
@@ -29,74 +99,83 @@ const SECTIONS = [
     nameAr: 'ألعاب الكمبيوتر',
     nameEn: 'PC Games',
     href: '/products?category=pc_games',
-    theme: 'from-[#0a1a2e] to-[#0f2a4e]',
-    border: 'border-[#2563eb]/40',
-    glow: '#2563eb',
-    logos: [
-      { label: 'Steam',    bg: '#1b2838', emoji: '🎮', img: 'https://www.google.com/s2/favicons?domain=store.steampowered.com&sz=64' },
-      { label: 'Valorant', bg: '#ef4444', emoji: '🎯', img: 'https://www.google.com/s2/favicons?domain=playvalorant.com&sz=64' },
-      { label: 'LoL',      bg: '#c89b3c', emoji: '⚡', img: 'https://www.google.com/s2/favicons?domain=leagueoflegends.com&sz=64' },
-      { label: 'Xbox',     bg: '#107c10', emoji: '🕹️', img: 'https://www.google.com/s2/favicons?domain=xbox.com&sz=64' },
+    color: '#06b6d4',
+    bg: 'linear-gradient(145deg, #001520, #002d40)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=store.steampowered.com&sz=64', label: 'Steam', bg: '#1b2838' },
+      { img: 'https://www.google.com/s2/favicons?domain=playvalorant.com&sz=64', label: 'Valorant', bg: '#ef4444' },
+      { img: 'https://www.google.com/s2/favicons?domain=leagueoflegends.com&sz=64', label: 'LoL', bg: '#c89b3c' },
+      { img: 'https://www.google.com/s2/favicons?domain=xbox.com&sz=64', label: 'Xbox', bg: '#107c10' },
     ],
   },
   {
-    id: 'services',
-    nameAr: 'التطبيقات',
-    nameEn: 'Applications',
-    href: '/products?category=services',
-    theme: 'from-[#0a2e1a] to-[#0f4e2a]',
-    border: 'border-[#059669]/40',
-    glow: '#059669',
-    logos: [
-      { label: 'Netflix', bg: '#e50914', img: 'https://www.google.com/s2/favicons?domain=netflix.com&sz=64' },
-      { label: 'Spotify', bg: '#1db954', img: 'https://www.google.com/s2/favicons?domain=spotify.com&sz=64' },
-      { label: 'YouTube', bg: '#ff0000', img: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=64' },
-      { label: 'ChatGPT', bg: '#10a37f', img: 'https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64' },
+    id: 'ai',
+    nameAr: 'الذكاء الاصطناعي',
+    nameEn: 'AI Tools',
+    href: '/products?category=services&q=ai',
+    color: '#a78bfa',
+    bg: 'linear-gradient(145deg, #100020, #200040)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64', label: 'ChatGPT', bg: '#10a37f' },
+      { img: 'https://www.google.com/s2/favicons?domain=midjourney.com&sz=64', label: 'MJ', bg: '#000000' },
+      { img: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64', label: 'Gemini', bg: '#4285f4' },
+      { img: 'https://www.google.com/s2/favicons?domain=claude.ai&sz=64', label: 'Claude', bg: '#d97706' },
     ],
   },
   {
-    id: 'gift_cards',
-    nameAr: 'بطاقات الهدية',
-    nameEn: 'Gift Cards',
-    href: '/products?category=gift_cards',
-    theme: 'from-[#2e1a00] to-[#4e2e00]',
-    border: 'border-[#d97706]/40',
-    glow: '#d97706',
-    logos: [
-      { label: 'Google',  bg: '#4285f4', img: 'https://www.google.com/s2/favicons?domain=play.google.com&sz=64' },
-      { label: 'iTunes',  bg: '#fc3158', img: 'https://www.google.com/s2/favicons?domain=apple.com&sz=64' },
-      { label: 'Amazon',  bg: '#ff9900', img: 'https://www.google.com/s2/favicons?domain=amazon.com&sz=64' },
-      { label: 'PSN',     bg: '#00439c', img: 'https://www.google.com/s2/favicons?domain=playstation.com&sz=64' },
+    id: 'subscriptions',
+    nameAr: 'الاشتراكات',
+    nameEn: 'Subscriptions',
+    href: '/products?category=services&q=premium',
+    color: '#8b5cf6',
+    bg: 'linear-gradient(145deg, #0f0020, #1f0040)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=netflix.com&sz=64', label: 'Netflix', bg: '#e50914' },
+      { img: 'https://www.google.com/s2/favicons?domain=spotify.com&sz=64', label: 'Spotify', bg: '#1db954' },
+      { img: 'https://www.google.com/s2/favicons?domain=canva.com&sz=64', label: 'Canva', bg: '#00c4cc' },
+      { img: 'https://www.google.com/s2/favicons?domain=adobe.com&sz=64', label: 'Adobe', bg: '#ff0000' },
     ],
   },
   {
-    id: 'social',
-    nameAr: 'السوشيال',
-    nameEn: 'Social',
-    href: '/products?category=general&q=social',
-    theme: 'from-[#001a2e] to-[#002e4e]',
-    border: 'border-[#0ea5e9]/40',
-    glow: '#0ea5e9',
-    logos: [
-      { label: 'TG',   bg: '#2aabee', img: 'https://www.google.com/s2/favicons?domain=telegram.org&sz=64' },
-      { label: 'FB',   bg: '#1877f2', img: 'https://www.google.com/s2/favicons?domain=facebook.com&sz=64' },
-      { label: 'TT',   bg: '#000000', img: 'https://www.google.com/s2/favicons?domain=tiktok.com&sz=64' },
-      { label: 'IG',   bg: '#e1306c', img: 'https://www.google.com/s2/favicons?domain=instagram.com&sz=64' },
+    id: 'design',
+    nameAr: 'برامج التصميم',
+    nameEn: 'Design Tools',
+    href: '/products?category=services&q=design',
+    color: '#f472b6',
+    bg: 'linear-gradient(145deg, #200010, #3f0020)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=canva.com&sz=64', label: 'Canva', bg: '#00c4cc' },
+      { img: 'https://www.google.com/s2/favicons?domain=adobe.com&sz=64', label: 'Adobe', bg: '#ff0000' },
+      { img: 'https://www.google.com/s2/favicons?domain=figma.com&sz=64', label: 'Figma', bg: '#f24e1e' },
+      { img: 'https://www.google.com/s2/favicons?domain=capcut.com&sz=64', label: 'CapCut', bg: '#000000' },
     ],
   },
   {
-    id: 'currencies',
-    nameAr: 'العملات الرقمية',
-    nameEn: 'Crypto',
-    href: '/products?category=general&q=crypto',
-    theme: 'from-[#1a1200] to-[#2e2000]',
-    border: 'border-[#f59e0b]/40',
-    glow: '#f59e0b',
-    logos: [
-      { label: 'USDT',    bg: '#26a17b', img: 'https://www.google.com/s2/favicons?domain=tether.to&sz=64' },
-      { label: 'BNB',     bg: '#f3ba2f', img: 'https://www.google.com/s2/favicons?domain=binance.com&sz=64' },
-      { label: 'Payeer',  bg: '#1e88e5', img: 'https://www.google.com/s2/favicons?domain=payeer.com&sz=64' },
-      { label: 'Perfect', bg: '#c62828', img: 'https://www.google.com/s2/favicons?domain=perfectmoney.com&sz=64' },
+    id: 'accounts',
+    nameAr: 'الأرقام',
+    nameEn: 'Numbers',
+    href: '/products?category=general&q=numbers',
+    color: '#34d399',
+    bg: 'linear-gradient(145deg, #001510, #003020)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=whatsapp.com&sz=64', label: 'WA', bg: '#25d366' },
+      { img: 'https://www.google.com/s2/favicons?domain=telegram.org&sz=64', label: 'TG', bg: '#2aabee' },
+      { img: 'https://www.google.com/s2/favicons?domain=snapchat.com&sz=64', label: 'SC', bg: '#fffc00' },
+      { img: 'https://www.google.com/s2/favicons?domain=twitter.com&sz=64', label: 'X', bg: '#000000' },
+    ],
+  },
+  {
+    id: 'wholesale',
+    nameAr: 'الحسابات الجامعة',
+    nameEn: 'Wholesale',
+    href: '/products?category=general&q=accounts',
+    color: '#fb923c',
+    bg: 'linear-gradient(145deg, #201005, #402010)',
+    icons: [
+      { img: 'https://www.google.com/s2/favicons?domain=facebook.com&sz=64', label: 'FB', bg: '#1877f2' },
+      { img: 'https://www.google.com/s2/favicons?domain=instagram.com&sz=64', label: 'IG', bg: '#e1306c' },
+      { img: 'https://www.google.com/s2/favicons?domain=tiktok.com&sz=64', label: 'TT', bg: '#000000' },
+      { img: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=64', label: 'YT', bg: '#ff0000' },
     ],
   },
 ];
@@ -126,7 +205,7 @@ function WhatsAppPopup() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
           onClick={dismiss}
         >
           <motion.div
@@ -136,9 +215,8 @@ function WhatsAppPopup() {
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={e => e.stopPropagation()}
             className="relative w-full max-w-sm rounded-3xl overflow-hidden"
-            style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ background: '#111827', border: '1px solid rgba(108,92,231,0.3)', boxShadow: '0 0 60px rgba(108,92,231,0.2)' }}
           >
-            {/* Banner */}
             <div className="relative h-44 flex items-center justify-center overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #075e54 0%, #128c7e 50%, #25d366 100%)' }}>
               <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 60%)' }} />
@@ -150,38 +228,28 @@ function WhatsAppPopup() {
                     <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.535 5.858L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.817 9.817 0 01-5.064-1.408l-.363-.215-3.761.98 1.006-3.653-.237-.375A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/>
                   </svg>
                 </div>
-                <p className="text-white font-black text-lg">انضم لمجتمع الواتساب الآن!</p>
-                <p className="text-white/80 text-sm">أخبار الموقع وعروض مميزة</p>
+                <p className="text-white font-black text-lg">انضم لمجتمعنا الآن!</p>
+                <p className="text-white/80 text-sm">أخبار وعروض حصرية</p>
               </div>
             </div>
-
-            {/* Body */}
             <div className="p-6 text-center" dir="rtl">
-              <div className="flex items-center gap-2 justify-center mb-1">
+              <div className="flex items-center gap-2 justify-center mb-2">
                 <span className="text-red-400 text-lg">🔴</span>
                 <h3 className="font-black text-white text-lg">ملاحظة مهمة !!</h3>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-2">
                 يرجى الانضمام الى{' '}
-                <a href={WA_GROUP} target="_blank" rel="noopener noreferrer" className="text-green-400 font-bold underline">
-                  مجتمع الواتساب
-                </a>
+                <a href={WA_GROUP} target="_blank" rel="noopener noreferrer" className="text-green-400 font-bold underline">مجتمع الواتساب</a>
               </p>
-              <p className="text-gray-400 text-sm mb-4">لمتابعة أخبار وتحديثات الموقع :</p>
-              <a
-                href={WA_GROUP}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-black text-white text-base mb-3 transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}
-              >
+              <p className="text-gray-400 text-sm mb-4">لمتابعة أخبار وتحديثات الموقع</p>
+              <a href={WA_GROUP} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl font-black text-white text-base mb-3 transition-all hover:scale-[1.02] active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
                 ➡️ اضغط هنا للانضمام ⬅️
               </a>
-              <button
-                onClick={dismiss}
-                className="w-full py-3 rounded-2xl font-bold text-gray-800 text-base transition-all hover:opacity-90"
-                style={{ background: '#fbbf24' }}
-              >
+              <button onClick={dismiss}
+                className="w-full py-3 rounded-2xl font-bold text-gray-800 text-base transition-all hover:opacity-90 active:scale-95"
+                style={{ background: '#fbbf24' }}>
                 إغلاق
               </button>
             </div>
@@ -192,68 +260,75 @@ function WhatsAppPopup() {
   );
 }
 
-// ─── Section Card ─────────────────────────────────────────────
-function SectionCard({ section }: { section: typeof SECTIONS[0] }) {
+// ─── Category Card ─────────────────────────────────────────────
+function CategoryCard({ cat, index }: { cat: typeof CATEGORIES[0]; index: number }) {
+  const [imgErrors, setImgErrors] = useState<Set<number>>(new Set());
+
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, type: 'spring', stiffness: 300, damping: 25 }}
+      whileHover={{ scale: 1.04, y: -4 }}
+      whileTap={{ scale: 0.96 }}
     >
-      <Link href={section.href}
-        className={`relative flex flex-col items-center gap-0 rounded-2xl overflow-hidden border ${section.border} block`}
-        style={{
-          background: `linear-gradient(135deg, ${section.theme.replace('from-', '').split(' ')[0].replace('[', '').replace(']', '')}, #111827)`,
-          boxShadow: `0 4px 24px ${section.glow}22`,
-        }}
-      >
-        {/* Golden star badge */}
-        <div className="absolute top-2 right-2 z-10">
-          <span className="text-yellow-400 text-sm">⭐</span>
-        </div>
-
-        {/* Logo grid */}
-        <div className="w-full p-3 pb-1">
-          <div className="grid grid-cols-2 gap-1.5">
-            {section.logos.map((logo, i) => (
-              <div
-                key={i}
-                className="aspect-square rounded-xl flex items-center justify-center overflow-hidden"
-                style={{ background: `${logo.bg}22`, border: `1px solid ${logo.bg}33` }}
-              >
-                {logo.img ? (
-                  <img
-                    src={logo.img}
-                    alt={logo.label}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const t = e.currentTarget;
-                      t.style.display = 'none';
-                      const span = document.createElement('span');
-                      span.textContent = (logo as any).emoji || logo.label.slice(0, 2);
-                      span.style.cssText = 'font-size:22px;';
-                      t.parentElement!.appendChild(span);
-                    }}
-                  />
-                ) : (
-                  <span className="text-2xl select-none">{(logo as any).emoji || logo.label.slice(0, 2)}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Category label strip */}
+      <Link href={cat.href} className="block">
         <div
-          className="w-full text-center py-2 px-3 mt-1"
+          className="relative rounded-2xl overflow-hidden"
           style={{
-            background: `linear-gradient(90deg, transparent, ${section.glow}22, transparent)`,
-            borderTop: `1px solid ${section.glow}33`,
+            background: cat.bg,
+            border: `1px solid ${cat.color}40`,
+            boxShadow: `0 4px 20px ${cat.color}18`,
+            minHeight: 130,
           }}
         >
-          <span className="text-xs font-black text-white/90">{section.nameAr}</span>
-          <span className="text-[10px] text-gray-500 mx-1">|</span>
-          <span className="text-[10px] text-gray-400">{section.nameEn}</span>
+          {/* VIP Star badge */}
+          <div className="absolute top-2 right-2 z-10">
+            <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,215,0,0.4)' }}>
+              <Star size={8} className="text-yellow-400" fill="#facc15" />
+              <span className="text-[9px] font-black text-yellow-400">VIP</span>
+            </div>
+          </div>
+
+          {/* Icon grid 2×2 */}
+          <div className="p-2.5 pb-1">
+            <div className="grid grid-cols-2 gap-1.5">
+              {cat.icons.map((icon, i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-xl flex items-center justify-center overflow-hidden"
+                  style={{
+                    background: `${icon.bg}22`,
+                    border: `1px solid ${icon.bg}33`,
+                  }}
+                >
+                  {!imgErrors.has(i) ? (
+                    <img
+                      src={icon.img}
+                      alt={icon.label}
+                      className="w-7 h-7 object-contain"
+                      onError={() => setImgErrors(s => new Set([...s, i]))}
+                    />
+                  ) : (
+                    <span className="text-xs font-black text-white/60">{icon.label.slice(0, 2)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Category name strip */}
+          <div
+            className="w-full text-center py-2 px-2"
+            style={{
+              background: `linear-gradient(0deg, ${cat.color}33 0%, transparent 100%)`,
+              borderTop: `1px solid ${cat.color}30`,
+            }}
+          >
+            <p className="text-[11px] font-black text-white leading-none">{cat.nameAr}</p>
+            <p className="text-[9px] text-white/40 mt-0.5">{cat.nameEn}</p>
+          </div>
         </div>
       </Link>
     </motion.div>
@@ -264,52 +339,87 @@ function SectionCard({ section }: { section: typeof SECTIONS[0] }) {
 function HeroBanner() {
   return (
     <div
-      className="relative w-full rounded-2xl overflow-hidden mb-6"
+      className="relative w-full rounded-2xl overflow-hidden mb-5"
       style={{
-        height: 180,
-        background: 'linear-gradient(135deg, #1a0533 0%, #2d0a5e 40%, #0f172a 100%)',
-        border: '1px solid rgba(124,58,237,0.3)',
+        background: 'linear-gradient(135deg, #0d0025 0%, #1a0050 35%, #0f172a 100%)',
+        border: '1px solid rgba(108,92,231,0.3)',
+        boxShadow: '0 0 60px rgba(108,92,231,0.15)',
+        minHeight: 160,
       }}
     >
-      {/* Decorative circles */}
-      <div className="absolute -right-10 -top-10 w-52 h-52 rounded-full opacity-20"
-        style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
-      <div className="absolute -left-10 -bottom-10 w-40 h-40 rounded-full opacity-15"
-        style={{ background: 'radial-gradient(circle, #00cec9, transparent)' }} />
+      {/* Glow circles */}
+      <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full opacity-25"
+        style={{ background: 'radial-gradient(circle, #6C5CE7, transparent)' }} />
+      <div className="absolute -left-8 -bottom-8 w-40 h-40 rounded-full opacity-20"
+        style={{ background: 'radial-gradient(circle, #00CEC9, transparent)' }} />
 
-      {/* Game character silhouettes (CSS art) */}
-      <div className="absolute right-4 bottom-0 flex items-end gap-1 opacity-30">
-        {[40, 55, 50, 45].map((h, i) => (
-          <div key={i} className="w-6 rounded-t-full"
-            style={{ height: h, background: 'linear-gradient(to top, #7c3aed, #c4b5fd)' }} />
-        ))}
+      {/* Animated particles */}
+      {[...Array(8)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 rounded-full"
+          style={{ background: i % 2 === 0 ? '#6C5CE7' : '#00CEC9', top: `${15 + i * 10}%`, left: `${5 + i * 10}%` }}
+          animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.5, 1] }}
+          transition={{ duration: 2 + i * 0.3, repeat: Infinity, delay: i * 0.2 }}
+        />
+      ))}
+
+      {/* Elite badge */}
+      <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+        style={{ background: 'rgba(108,92,231,0.4)', border: '1px solid rgba(196,181,253,0.4)' }}>
+        <Zap size={10} className="text-yellow-400" />
+        <span className="text-[11px] font-black text-white">Elite Store</span>
       </div>
 
-      {/* Badge */}
-      <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-[11px] font-bold text-white"
-        style={{ background: 'rgba(124,58,237,0.6)', border: '1px solid rgba(196,181,253,0.4)' }}>
-        ✨ Elite Store
-      </div>
-
-      {/* Text */}
-      <div className="absolute inset-0 flex flex-col justify-center pr-6" dir="rtl">
-        <p className="text-white font-black text-2xl leading-tight mb-1">
-          شحن جميع الألعاب فوراً
-        </p>
-        <div className="flex items-center gap-4 mt-2">
-          <span className="flex items-center gap-1 text-xs text-white/70">
-            <Shield size={12} className="text-green-400" /> ضمان
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col justify-center pr-5 pl-2" dir="rtl">
+        <motion.p
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-white font-black text-2xl leading-tight mb-2"
+          style={{ textShadow: '0 0 30px rgba(108,92,231,0.5)' }}
+        >
+          متوفرون معكم جميع<br />أيام الأسبوع 🕐
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="flex items-center gap-3 mb-2"
+        >
+          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
+            <Shield size={10} className="text-green-400" /> ضمان
           </span>
-          <span className="flex items-center gap-1 text-xs text-white/70">
-            <Zap size={12} className="text-yellow-400" /> خدمة سريعة
+          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
+            <Zap size={10} className="text-yellow-400" /> خدمة سريعة
           </span>
-          <span className="flex items-center gap-1 text-xs text-white/70">
-            <Clock size={12} className="text-blue-400" /> سعر ممتاز
+          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
+            <Clock size={10} className="text-blue-400" /> سعر ممتاز
           </span>
-        </div>
-        <p className="text-white/50 text-xs mt-2 leading-relaxed max-w-[240px]">
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="text-white/40 text-xs leading-relaxed max-w-[220px]"
+        >
           نقدم لكم أفضل الأسعار والخدمات داخل وخارج سوريا
-        </p>
+        </motion.p>
+      </div>
+
+      {/* Right visual (vertical bars effect) */}
+      <div className="absolute right-0 bottom-0 top-0 w-24 flex items-end justify-end pr-3 pb-3 gap-1">
+        {[60, 80, 55, 90, 70].map((h, i) => (
+          <motion.div
+            key={i}
+            className="w-3 rounded-t-md"
+            style={{ height: `${h}%`, background: `linear-gradient(to top, #6C5CE7${90 - i * 10}, #a29bfe30)` }}
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            transition={{ delay: 0.1 * i, type: 'spring', stiffness: 200 }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -318,20 +428,68 @@ function HeroBanner() {
 // ─── Search Bar ───────────────────────────────────────────────
 function SearchBar() {
   const [q, setQ] = useState('');
+
+  const go = () => {
+    if (q.trim()) window.location.href = `/products?q=${encodeURIComponent(q.trim())}`;
+  };
+
   return (
-    <div className="relative mb-6">
-      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-        <Search size={16} className="text-gray-400" />
+    <div className="relative mb-5 flex items-center gap-2">
+      <div className="flex-1 relative">
+        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+          <Search size={15} className="text-gray-500" />
+        </div>
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && go()}
+          placeholder="ابحث عن منتج أو لعبة..."
+          dir="rtl"
+          className="w-full py-3 pr-9 pl-4 rounded-2xl text-sm text-white placeholder-gray-500 outline-none transition-all"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onFocus={e => { e.currentTarget.style.border = '1px solid rgba(108,92,231,0.5)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(108,92,231,0.1)'; }}
+          onBlur={e => { e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
+        />
       </div>
-      <input
-        value={q}
-        onChange={e => setQ(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && q && (window.location.href = `/products?q=${encodeURIComponent(q)}`)}
-        placeholder="بحث..."
-        dir="rtl"
-        className="w-full py-3 pr-10 pl-4 rounded-2xl text-sm text-white placeholder-gray-500 outline-none focus:ring-2 ring-purple-500/40"
-        style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.08)' }}
-      />
+      <button
+        onClick={go}
+        className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
+        style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.4)' }}
+      >
+        <Search size={16} className="text-white" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Stats Bar ────────────────────────────────────────────────
+function StatsBar() {
+  const stats = [
+    { icon: '⚡', label: 'تسليم فوري', value: '24/7' },
+    { icon: '🛡️', label: 'ضمان كامل', value: '100%' },
+    { icon: '💎', label: 'منتج متاح', value: '500+' },
+    { icon: '⭐', label: 'عميل راضٍ', value: '10K+' },
+  ];
+  return (
+    <div className="grid grid-cols-4 gap-2 mb-5">
+      {stats.map((s, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 + i * 0.05 }}
+          className="flex flex-col items-center py-3 px-1 rounded-xl text-center"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <span className="text-lg leading-none mb-1">{s.icon}</span>
+          <span className="text-white font-black text-sm leading-none">{s.value}</span>
+          <span className="text-gray-500 text-[9px] mt-0.5">{s.label}</span>
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -343,44 +501,68 @@ export default function Home() {
   return (
     <PublicLayout>
       <WhatsAppPopup />
+      <div className="max-w-2xl mx-auto px-3 pt-3 pb-24">
 
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-20">
         {/* Hero */}
         <HeroBanner />
 
         {/* Search */}
         <SearchBar />
 
-        {/* Section label */}
-        <div className="flex items-center justify-between mb-4" dir="rtl">
+        {/* Stats */}
+        <StatsBar />
+
+        {/* Categories header */}
+        <div className="flex items-center justify-between mb-3" dir="rtl">
           <h2 className="text-white font-black text-base">تصفح الأقسام</h2>
-          <Link href="/products" className="flex items-center gap-1 text-purple-400 text-xs font-bold hover:underline">
-            عرض الكل <ChevronLeft size={14} />
+          <Link href="/products" className="flex items-center gap-1 text-purple-400 text-xs font-bold hover:text-purple-300 transition-colors">
+            عرض الكل <ChevronLeft size={13} />
           </Link>
         </div>
 
-        {/* 3×2 Category Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {SECTIONS.map(section => (
-            <SectionCard key={section.id} section={section} />
+        {/* 3-column category grid */}
+        <div className="grid grid-cols-3 gap-2.5 mb-6">
+          {CATEGORIES.map((cat, i) => (
+            <CategoryCard key={cat.id} cat={cat} index={i} />
           ))}
         </div>
 
-        {/* Quick links row */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* CTA Buttons */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <Link href="/products"
-            className="flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
-            style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 20px #6C5CE744' }}>
-            <Zap size={16} /> تصفح جميع المنتجات
+            className="flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 20px #6C5CE750' }}>
+            <Zap size={15} /> جميع المنتجات
           </Link>
-          <a href={`https://wa.me/963992718483`} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
-            style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)', boxShadow: '0 4px 20px #25d36644' }}>
+          <a href={WA_SUPPORT} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)', boxShadow: '0 4px 20px #25d36650' }}>
             <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.535 5.858L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.817 9.817 0 01-5.064-1.408l-.363-.215-3.761.98 1.006-3.653-.237-.375A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/>
             </svg>
             تواصل معنا
           </a>
+        </div>
+
+        {/* Feature badges */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {['🔒 دفع آمن', '⚡ تسليم فوري', '💬 دعم 24/7', '🔄 استرجاع مضمون', '💎 جودة عالية'].map((badge, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + i * 0.08 }}
+              className="text-xs px-3 py-1.5 rounded-full font-semibold"
+              style={{
+                background: 'rgba(108,92,231,0.1)',
+                border: '1px solid rgba(108,92,231,0.25)',
+                color: '#a29bfe',
+              }}
+            >
+              {badge}
+            </motion.span>
+          ))}
         </div>
       </div>
     </PublicLayout>

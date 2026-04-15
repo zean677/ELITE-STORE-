@@ -33,7 +33,10 @@ const METHODS: Record<string, MethodInfo> = {
     emoji: '💳',
     color: '#3b82f6',
     type: 'auto',
-    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
+    details: [
+      { label: 'اسم المحفظة', value: 'zean677' },
+      { label: 'معرّف المحفظة', value: '5649dd63431812890980008b5b1c3d53' },
+    ],
   },
   usdt_bep20_auto: {
     nameAr: 'USDT BEP-20 اوتوماتيك',

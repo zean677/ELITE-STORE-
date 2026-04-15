@@ -106,14 +106,29 @@ export function PublicLayout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={dir}>
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+
+      {/* Announcement ticker bar */}
+      <div className="w-full overflow-hidden py-1.5" style={{ background: 'linear-gradient(90deg, #6C5CE7, #00CEC9, #6C5CE7)', backgroundSize: '200% 100%' }}>
+        <div className="flex items-center">
+          <div className="ticker-text flex items-center gap-8 text-white text-xs font-bold px-4">
+            {['⚡ خدمة سريعة 24/7', '🔒 دفع آمن ومضمون', '💎 أفضل الأسعار في سوريا', '✅ تسليم فوري بعد التحقق', '🎮 شحن جميع الألعاب', '📱 خدمات سوشيال ميديا', '💳 شحن رصيد سيريتل وشام كاش', '🌟 Elite Store — المتجر الأول'].map((item, i) => (
+              <span key={i} className="flex items-center gap-2 whitespace-nowrap">{item} <span className="opacity-50">•</span></span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl" style={{ background: 'rgba(15,23,42,0.92)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-all group-hover:scale-110"
+                style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.4)' }}>
                 <span className="text-white font-black text-sm">E</span>
               </div>
-              <span className="font-bold text-lg tracking-tight font-heading">ELITE STORE</span>
+              <div>
+                <span className="font-black text-base tracking-tight" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
+              </div>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6">
@@ -211,21 +226,47 @@ export function PublicLayout({ children }: LayoutProps) {
       <main>{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-16 py-8 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white font-black text-xs">E</span>
+      <footer className="mt-16 pt-8 pb-4 px-4" style={{ background: 'linear-gradient(0deg, #080d1a, #0F172A)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="max-w-7xl mx-auto">
+          {/* Top row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6">
+            <div className="flex flex-col items-center sm:items-start gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}>
+                  <span className="text-white font-black text-sm">E</span>
+                </div>
+                <span className="font-black text-base" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
+              </div>
+              <p className="text-xs text-gray-500 text-center sm:text-right max-w-xs" dir="rtl">منصة بيع خدمات رقمية وشحن ألعاب — متوفرون 24/7</p>
             </div>
-            <span className="text-sm font-bold text-muted-foreground">ELITE STORE</span>
+
+            <div className="flex items-center gap-3">
+              {[
+                { href: 'https://wa.me/963992718483', label: '💬 واتساب', color: '#25d366' },
+                { href: 'https://t.me/elitestore_sy', label: '✈️ تيليغرام', color: '#2aabee' },
+              ].map((s, i) => (
+                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
+                  className="text-xs px-3 py-2 rounded-xl font-bold text-white transition-all hover:scale-105 active:scale-95"
+                  style={{ background: `${s.color}22`, border: `1px solid ${s.color}44`, color: s.color }}>
+                  {s.label}
+                </a>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-5 text-xs text-muted-foreground">
-            <Link href="/support" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الدعم' : 'Support'}</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الشروط' : 'Terms'}</Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">{lang === 'ar' ? 'الخصوصية' : 'Privacy'}</Link>
-            <a href="https://wa.me/963992718483" target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition-colors">WhatsApp</a>
+
+          {/* Links */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-5 text-xs text-gray-500">
+            <Link href="/" className="hover:text-gray-300 transition-colors">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link>
+            <Link href="/products" className="hover:text-gray-300 transition-colors">{lang === 'ar' ? 'المنتجات' : 'Products'}</Link>
+            <Link href="/support" className="hover:text-gray-300 transition-colors">{lang === 'ar' ? 'الدعم' : 'Support'}</Link>
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">{lang === 'ar' ? 'الشروط' : 'Terms'}</Link>
+            <Link href="/privacy" className="hover:text-gray-300 transition-colors">{lang === 'ar' ? 'الخصوصية' : 'Privacy'}</Link>
           </div>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Elite Store. All rights reserved.</p>
+
+          {/* Bottom */}
+          <div className="border-t border-white/5 pt-4 text-center">
+            <p className="text-xs text-gray-600">© {new Date().getFullYear()} Elite Store — جميع الحقوق محفوظة</p>
+          </div>
         </div>
       </footer>
 
