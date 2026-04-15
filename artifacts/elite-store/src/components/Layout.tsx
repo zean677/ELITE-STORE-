@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/i18n';
-import { useCurrency } from '@/hooks/use-currency';
 import { useGetNotifications } from '@workspace/api-client-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { CurrencySwitcher } from '@/components/CurrencySwitcher';
@@ -207,9 +206,11 @@ export function PublicLayout({ children }: LayoutProps) {
 
 export function DashboardLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
-  const { t, dir } = useLanguage();
+  const { t, dir, lang } = useLanguage();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
+  const unreadCount = (notifications || []).filter((n: any) => !n.isRead).length;
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: t('dashboard') },
@@ -230,6 +231,16 @@ export function DashboardLayout({ children }: LayoutProps) {
   ];
 
   const isAdmin = user?.role === 'admin';
+
+  const balanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * 13000).toFixed(2) : '0.00';
+
+  const mobileBottomNav = [
+    { href: '/dashboard', icon: Shield, color: '#22c55e', label: lang === 'ar' ? 'حماية' : 'Security' },
+    { href: '/wallet', icon: Wallet, color: '#f59e0b', label: lang === 'ar' ? 'محفظة' : 'Wallet' },
+    { href: '/dashboard', icon: Home, color: '#3b82f6', label: lang === 'ar' ? 'الرئيسية' : 'Home', isCenter: true },
+    { href: '/orders', icon: CreditCard, color: '#3b82f6', label: lang === 'ar' ? 'طلباتي' : 'Orders' },
+    { href: '/products', icon: ShoppingBag, color: '#ef4444', label: lang === 'ar' ? 'المتجر' : 'Store' },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex" dir={dir}>
@@ -257,7 +268,7 @@ export function DashboardLayout({ children }: LayoutProps) {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">{user.username}</p>
-                <p className="text-xs text-secondary font-medium">${parseFloat(user.balance?.toString() ?? '0').toFixed(2)}</p>
+                <p className="text-xs text-secondary font-medium">{balanceSYP} ل.س</p>
               </div>
             </div>
           </div>
@@ -307,17 +318,86 @@ export function DashboardLayout({ children }: LayoutProps) {
         </div>
       </aside>
 
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
-          <div className="flex items-center justify-between h-14 px-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-card transition-colors">
-              <Menu size={18} />
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen pb-20 lg:pb-0">
+        {/* Mobile Header */}
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-xl lg:hidden">
+          <div className="flex items-center justify-between h-14 px-4" dir="rtl">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-card transition-colors">
+              <Menu size={20} />
             </button>
-            <div className="flex-1" />
+            <div className="flex items-center gap-3">
+              {user && (
+                <Link href="/deposit" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 transition-colors">
+                  <span className="text-green-400 text-xs font-bold">+</span>
+                  <span className="text-xs font-bold text-white">{balanceSYP} ل.س</span>
+                </Link>
+              )}
+              <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
+                <Bell size={18} className="text-muted-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </Link>
+              {user && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <span className="text-white text-xs font-black">{user.username[0].toUpperCase()}</span>
+                </div>
+              )}
+            </div>
           </div>
         </header>
+
+        {/* Desktop Header */}
+        <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl hidden lg:block">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex-1" />
+            {user && (
+              <div className="flex items-center gap-3">
+                <Link href="/deposit" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 transition-colors">
+                  <span className="text-green-400 text-xs font-bold">+</span>
+                  <span className="text-xs font-bold text-white">{balanceSYP} ل.س</span>
+                </Link>
+                <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
+                  <Bell size={18} className="text-muted-foreground" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  )}
+                </Link>
+              </div>
+            )}
+          </div>
+        </header>
+
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-border/50" style={{ background: 'rgba(10,10,20,0.97)', backdropFilter: 'blur(20px)' }}>
+        <div className="flex items-end justify-around px-2 pb-2 pt-1">
+          {mobileBottomNav.map((item, idx) => {
+            const Icon = item.icon;
+            const active = location === item.href || (item.href === '/dashboard' && location === '/dashboard');
+            if (item.isCenter) {
+              return (
+                <Link key={idx} href={item.href} className="flex flex-col items-center -mt-5">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-transform active:scale-95"
+                    style={{ background: 'linear-gradient(145deg, #1e3a8a, #3b82f6)', boxShadow: '0 -4px 20px rgba(59,130,246,0.5), 0 4px 15px rgba(0,0,0,0.5)' }}>
+                    <Icon size={26} color="#fff" />
+                  </div>
+                  <span className="text-[10px] mt-1 font-medium" style={{ color: '#3b82f6' }}>{item.label}</span>
+                </Link>
+              );
+            }
+            return (
+              <Link key={idx} href={item.href} className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all active:scale-95">
+                <Icon size={22} color={active ? item.color : '#6b7280'} />
+                <span className="text-[10px] font-medium" style={{ color: active ? item.color : '#6b7280' }}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
       <FloatingSupport />
     </div>
   );

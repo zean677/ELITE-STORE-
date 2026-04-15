@@ -23,7 +23,7 @@ router.post("/payment/create", requireAuth, async (req: AuthRequest, res): Promi
     return;
   }
 
-  const { amount, currency, method, screenshotUrl } = parsed.data;
+  const { amount, currency, method, screenshotUrl, transactionRef } = parsed.data;
 
   const [payment] = await db
     .insert(paymentsTable)
@@ -34,6 +34,7 @@ router.post("/payment/create", requireAuth, async (req: AuthRequest, res): Promi
       method,
       status: "pending",
       screenshotUrl: screenshotUrl ?? null,
+      transactionRef: transactionRef ?? null,
       adminNote: null,
     })
     .returning();

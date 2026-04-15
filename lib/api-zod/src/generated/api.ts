@@ -274,8 +274,9 @@ export const GetOrderResponse = zod.object({
 export const CreatePaymentBody = zod.object({
   amount: zod.number().min(1),
   currency: zod.enum(["USD", "SYP", "EUR"]),
-  method: zod.enum(["syriatel_cash", "sham_cash"]),
-  screenshotUrl: zod.string(),
+  method: zod.string(),
+  screenshotUrl: zod.string().optional(),
+  transactionRef: zod.string().optional(),
 });
 
 /**

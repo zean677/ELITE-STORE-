@@ -10,6 +10,7 @@ export const paymentsTable = pgTable("payments", {
   method: text("method").notNull(),
   status: text("status").notNull().default("pending"),
   screenshotUrl: text("screenshot_url"),
+  transactionRef: text("transaction_ref"),
   adminNote: text("admin_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

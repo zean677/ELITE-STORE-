@@ -288,7 +288,7 @@ function HeroBanner() {
       {/* Badge */}
       <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-[11px] font-bold text-white"
         style={{ background: 'rgba(124,58,237,0.6)', border: '1px solid rgba(196,181,253,0.4)' }}>
-        ✨ شمس ستورا
+        ✨ Elite Store
       </div>
 
       {/* Text */}

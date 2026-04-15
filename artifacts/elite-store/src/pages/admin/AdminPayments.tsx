@@ -4,12 +4,13 @@ import { useGetAdminPayments, useVerifyPayment } from '@workspace/api-client-rea
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StatusBadge } from '@/components/StatusBadge';
-import { CreditCard, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { CreditCard, CheckCircle, XCircle, ExternalLink, Hash, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPayments() {
   const [status, setStatus] = useState('pending');
   const [page, setPage] = useState(1);
+  const [screenshotModal, setScreenshotModal] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data, refetch, isLoading } = useGetAdminPayments({ page, limit: 25, status: status || undefined });
@@ -32,6 +33,32 @@ export default function AdminPayments() {
   return (
     <ProtectedRoute adminOnly>
       <DashboardLayout>
+        {/* Screenshot Modal */}
+        <AnimatePresence>
+          {screenshotModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setScreenshotModal(null)}
+              className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                className="relative max-w-lg w-full"
+                onClick={e => e.stopPropagation()}
+              >
+                <button onClick={() => setScreenshotModal(null)} className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1">
+                  <XCircle size={16} /> إغلاق
+                </button>
+                <img src={screenshotModal} alt="Payment Screenshot" className="w-full rounded-2xl border border-border shadow-2xl" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -69,16 +96,26 @@ export default function AdminPayments() {
                         </div>
                         <p className="text-xs text-muted-foreground">{payment.userEmail}</p>
                         <p className="text-sm font-bold text-primary">{payment.currency} {parseFloat(payment.amount?.toString() ?? '0').toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground capitalize">Method: {payment.method?.replace('_', ' ')}</p>
+                        <p className="text-xs text-muted-foreground capitalize">Method: {payment.method?.replace(/_/g, ' ')}</p>
+                        {(payment as any).transactionRef && (
+                          <p className="text-xs flex items-center gap-1 text-amber-400">
+                            <Hash size={11} />
+                            رقم العملية: <span className="font-mono font-bold">{(payment as any).transactionRef}</span>
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">{new Date(payment.createdAt).toLocaleString()}</p>
                       </div>
 
                       <div className="flex flex-col items-end gap-2">
                         {payment.screenshotUrl && payment.screenshotUrl !== 'pending_upload' && (
-                          <a href={payment.screenshotUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-secondary hover:underline">
-                            <ExternalLink size={12} />
-                            View Screenshot
-                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setScreenshotModal(payment.screenshotUrl!)}
+                            className="flex items-center gap-1 text-xs text-secondary hover:underline"
+                          >
+                            <ImageIcon size={12} />
+                            عرض الصورة
+                          </button>
                         )}
                         {payment.status === 'pending' && (
                           <div className="flex gap-2">

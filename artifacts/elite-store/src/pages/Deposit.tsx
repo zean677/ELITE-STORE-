@@ -1,52 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useCreatePayment } from '@workspace/api-client-react';
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLanguage } from '@/i18n';
-import { useCurrency } from '@/hooks/use-currency';
-import { Loader2, Upload, Phone, CreditCard, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, CheckCircle, X, Image as ImageIcon, Hash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type PaymentMethod = 'syriatel_cash' | 'sham_cash';
 type Currency = 'USD' | 'SYP' | 'EUR';
 
-const methodInfo = {
-  syriatel_cash: {
-    name: 'Syriatel Cash',
-    nameAr: 'سيريتل كاش',
-    icon: Phone,
-    details: [{ label: 'Number', value: '14816688' }],
-    color: 'secondary',
+interface MethodInfo {
+  nameAr: string;
+  nameEn: string;
+  emoji: string;
+  color: string;
+  type: 'auto' | 'manual';
+  details: { label: string; value: string }[];
+}
+
+const METHODS: Record<string, MethodInfo> = {
+  syriatel_cash_auto: {
+    nameAr: 'سيريتل كاش اوتوماتيك',
+    nameEn: 'Syriatel Cash Auto',
+    emoji: '📱',
+    color: '#ef4444',
+    type: 'auto',
+    details: [{ label: 'الرقم', value: '14816688' }],
   },
-  sham_cash: {
-    name: 'Sham Cash',
-    nameAr: 'شام كاش',
-    icon: CreditCard,
-    details: [
-      { label: 'Wallet Name', value: 'zean677' },
-      { label: 'Wallet ID', value: '5649dd63...' },
-    ],
-    color: 'accent',
+  sham_cash_auto: {
+    nameAr: 'شام كاش اوتوماتيك',
+    nameEn: 'Sham Cash Auto',
+    emoji: '💳',
+    color: '#3b82f6',
+    type: 'auto',
+    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
+  },
+  usdt_bep20_auto: {
+    nameAr: 'USDT BEP-20 اوتوماتيك',
+    nameEn: 'USDT BEP-20 Auto',
+    emoji: '💚',
+    color: '#22c55e',
+    type: 'auto',
+    details: [{ label: 'الشبكة', value: 'BEP-20 (BSC)' }, { label: 'العنوان', value: '0x...' }],
+  },
+  binance_id: {
+    nameAr: 'Binance ID',
+    nameEn: 'Binance ID',
+    emoji: '🟡',
+    color: '#f59e0b',
+    type: 'manual',
+    details: [{ label: 'Binance ID', value: '123456789' }],
+  },
+  coinex: {
+    nameAr: 'CoinEx',
+    nameEn: 'CoinEx',
+    emoji: '🟢',
+    color: '#10b981',
+    type: 'manual',
+    details: [{ label: 'CoinEx UID', value: '987654321' }],
+  },
+  usdt_manual: {
+    nameAr: 'USDT يدوي',
+    nameEn: 'USDT Manual',
+    emoji: '💵',
+    color: '#22c55e',
+    type: 'manual',
+    details: [{ label: 'TRC-20 Address', value: 'T...' }],
+  },
+  syriatel_cash_manual: {
+    nameAr: 'سيريتل كاش يدوي',
+    nameEn: 'Syriatel Cash Manual',
+    emoji: '📞',
+    color: '#ef4444',
+    type: 'manual',
+    details: [{ label: 'الرقم', value: '14816688' }],
+  },
+  sham_cash_dollar: {
+    nameAr: 'شام كاش دولار',
+    nameEn: 'Sham Cash Dollar',
+    emoji: '💲',
+    color: '#3b82f6',
+    type: 'manual',
+    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
+  },
+  sham_cash_syp: {
+    nameAr: 'شام كاش سوري',
+    nameEn: 'Sham Cash Syrian',
+    emoji: '🇸🇾',
+    color: '#8b5cf6',
+    type: 'manual',
+    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
   },
 };
 
 export default function Deposit() {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
   const { toast } = useToast();
   const createPayment = useCreatePayment();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [method, setMethod] = useState<PaymentMethod>('syriatel_cash');
+  const [method, setMethod] = useState('syriatel_cash_auto');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('USD');
-  const [screenshotUrl, setScreenshotUrl] = useState('');
+  const [currency, setCurrency] = useState<Currency>('SYP');
+  const [transactionRef, setTransactionRef] = useState('');
+  const [screenshotFile, setScreenshotFile] = useState<string | null>(null);
+  const [screenshotName, setScreenshotName] = useState('');
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitted, setSubmitted] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'الملف كبير جداً', description: 'يجب أن يكون الملف أقل من 5MB', variant: 'destructive' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setScreenshotFile(ev.target?.result as string);
+      setScreenshotName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) {
-      toast({ title: 'Invalid amount', description: 'Please enter a valid amount', variant: 'destructive' });
+      toast({ title: lang === 'ar' ? 'مبلغ غير صحيح' : 'Invalid amount', description: lang === 'ar' ? 'أدخل مبلغاً صحيحاً' : 'Enter a valid amount', variant: 'destructive' });
+      return;
+    }
+    if (!transactionRef.trim()) {
+      toast({ title: lang === 'ar' ? 'رقم العملية مطلوب' : 'Transaction ref required', description: lang === 'ar' ? 'أدخل رقم العملية' : 'Enter the transaction reference', variant: 'destructive' });
+      return;
+    }
+    if (!screenshotFile) {
+      toast({ title: lang === 'ar' ? 'الصورة مطلوبة' : 'Screenshot required', description: lang === 'ar' ? 'ارفع صورة إثبات التحويل' : 'Upload a screenshot', variant: 'destructive' });
       return;
     }
     try {
@@ -54,12 +142,13 @@ export default function Deposit() {
         amount: parseFloat(amount),
         currency,
         method,
-        screenshotUrl: screenshotUrl || 'pending_upload',
-      });
+        screenshotUrl: screenshotFile,
+        transactionRef: transactionRef.trim(),
+      } as any);
       setSubmitted(true);
     } catch (err: any) {
-      const msg = err?.data?.message ?? 'Failed to submit payment';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
+      const msg = err?.data?.message ?? (lang === 'ar' ? 'فشل إرسال الطلب' : 'Failed to submit');
+      toast({ title: lang === 'ar' ? 'خطأ' : 'Error', description: msg, variant: 'destructive' });
     }
   };
 
@@ -68,14 +157,19 @@ export default function Deposit() {
       <ProtectedRoute>
         <DashboardLayout>
           <div className="flex items-center justify-center min-h-[60vh]">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-sm">
-              <div className="w-20 h-20 rounded-full bg-success/15 border border-success/30 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle size={36} className="text-success" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-sm" dir="rtl">
+              <div className="w-20 h-20 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle size={36} className="text-green-400" />
               </div>
-              <h2 className="font-heading text-xl font-bold mb-2">Payment Submitted</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">Your deposit request has been submitted. Our team will verify it within 24 hours and add the balance to your wallet.</p>
-              <button onClick={() => { setSubmitted(false); setStep(1); setAmount(''); setScreenshotUrl(''); }} className="mt-6 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors">
-                New Deposit
+              <h2 className="font-heading text-xl font-bold mb-2">{lang === 'ar' ? 'تم إرسال الطلب' : 'Request Submitted'}</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {lang === 'ar'
+                  ? 'تم إرسال طلب شحن رصيدك بنجاح. سيتم مراجعته من قبل الإدارة وإضافة الرصيد خلال فترة قصيرة.'
+                  : 'Your deposit request has been submitted. Our team will verify it and add the balance shortly.'}
+              </p>
+              <button onClick={() => { setSubmitted(false); setStep(1); setAmount(''); setTransactionRef(''); setScreenshotFile(null); setScreenshotName(''); }}
+                className="mt-6 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors">
+                {lang === 'ar' ? 'شحن مرة أخرى' : 'New Deposit'}
               </button>
             </motion.div>
           </div>
@@ -84,116 +178,209 @@ export default function Deposit() {
     );
   }
 
+  const selectedMethod = METHODS[method];
+
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="max-w-xl mx-auto space-y-6">
+        <div className="max-w-xl mx-auto space-y-6" dir="rtl">
           <div>
-            <h1 className="font-heading text-2xl font-bold">{t('deposit')}</h1>
-            <p className="text-muted-foreground text-sm mt-1">Add funds to your wallet</p>
+            <h1 className="font-heading text-2xl font-bold">{lang === 'ar' ? 'شحن رصيد' : 'Top Up'}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{lang === 'ar' ? 'اختر طريقة الدفع وأدخل تفاصيل التحويل' : 'Choose payment method and enter transfer details'}</p>
           </div>
 
+          {/* Step Indicator */}
           <div className="flex gap-2 p-1 bg-card border border-border rounded-xl">
             {[1, 2, 3].map(s => (
               <div key={s} className={`flex-1 py-2 text-center text-xs font-semibold rounded-lg transition-colors ${step >= s ? 'bg-primary text-white' : 'text-muted-foreground'}`}>
-                Step {s}
+                {lang === 'ar' ? `خطوة ${s}` : `Step ${s}`}
               </div>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Step 1: Choose Payment Method */}
             {step === 1 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <h2 className="font-heading font-bold">Select Payment Method</h2>
-                <div className="grid gap-3">
-                  {(Object.entries(methodInfo) as [PaymentMethod, typeof methodInfo.syriatel_cash][]).map(([key, info]) => {
-                    const Icon = info.icon;
-                    return (
-                      <button key={key} type="button" onClick={() => setMethod(key)} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${method === key ? 'border-primary/50 bg-primary/10' : 'border-border bg-card hover:border-border/80'}`}>
-                        <div className={`w-10 h-10 rounded-xl bg-${info.color}/15 flex items-center justify-center`}>
-                          <Icon size={18} className={`text-${info.color}`} />
+                <h2 className="font-heading font-bold">{lang === 'ar' ? 'اختر طريقة الشحن' : 'Select Payment Method'}</h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(METHODS).map(([key, info]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setMethod(key)}
+                      className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${method === key ? 'border-2 bg-card' : 'border border-border bg-card/50 hover:border-border/80'}`}
+                      style={{ borderColor: method === key ? info.color : undefined }}
+                    >
+                      {method === key && (
+                        <div className="absolute top-1.5 left-1.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: info.color }}>
+                          <CheckCircle size={10} className="text-white" />
                         </div>
-                        <div>
-                          <p className="font-semibold text-sm">{lang === 'ar' ? info.nameAr : info.name}</p>
-                          <p className="text-xs text-muted-foreground">{info.details[0].label}: {info.details[0].value}</p>
-                        </div>
-                        <div className={`ml-auto w-4 h-4 rounded-full border-2 flex items-center justify-center ${method === key ? 'border-primary' : 'border-border'}`}>
-                          {method === key && <div className="w-2 h-2 rounded-full bg-primary" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+                      )}
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border border-border/50"
+                        style={{ background: `${info.color}18` }}>
+                        {info.emoji}
+                      </div>
+                      <span className="text-[11px] font-semibold text-center leading-tight">{lang === 'ar' ? info.nameAr : info.nameEn}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                        style={{ background: info.type === 'auto' ? '#22c55e22' : '#f59e0b22', color: info.type === 'auto' ? '#22c55e' : '#f59e0b' }}>
+                        {info.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-                <button type="button" onClick={() => setStep(2)} className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-xl shadow-primary/30">
-                  Continue
+                <button type="button" onClick={() => setStep(2)}
+                  className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-xl shadow-primary/30">
+                  {lang === 'ar' ? 'التالي' : 'Continue'}
                 </button>
               </motion.div>
             )}
 
+            {/* Step 2: Payment Details + Amount */}
             {step === 2 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <h2 className="font-heading font-bold">Transfer Details</h2>
-                <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-                  <h3 className="font-semibold text-sm">{lang === 'ar' ? methodInfo[method].nameAr : methodInfo[method].name}</h3>
-                  {methodInfo[method].details.map(d => (
-                    <div key={d.label} className="flex justify-between text-sm">
+                <h2 className="font-heading font-bold">{lang === 'ar' ? 'تفاصيل التحويل' : 'Transfer Details'}</h2>
+
+                <div className="bg-card border-2 rounded-2xl p-5 space-y-3" style={{ borderColor: selectedMethod.color }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">{selectedMethod.emoji}</span>
+                    <span className="font-bold">{lang === 'ar' ? selectedMethod.nameAr : selectedMethod.nameEn}</span>
+                    <span className="mr-auto text-xs px-2 py-0.5 rounded-full font-medium"
+                      style={{ background: selectedMethod.type === 'auto' ? '#22c55e22' : '#f59e0b22', color: selectedMethod.type === 'auto' ? '#22c55e' : '#f59e0b' }}>
+                      {selectedMethod.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
+                    </span>
+                  </div>
+                  {selectedMethod.details.map((d, i) => (
+                    <div key={i} className="flex justify-between items-center text-sm p-2 bg-background rounded-xl">
                       <span className="text-muted-foreground">{d.label}</span>
-                      <span className="font-mono font-bold">{d.value}</span>
+                      <span className="font-mono font-bold text-white select-all">{d.value}</span>
                     </div>
                   ))}
-                  {method === 'sham_cash' && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Full Wallet ID</span>
-                      <span className="font-mono text-xs text-secondary">5649dd63431812890980008b5b1c3d53</span>
-                    </div>
-                  )}
+                  <p className="text-xs text-muted-foreground pt-1">
+                    {lang === 'ar' ? '⚠️ تأكد من نسخ المعلومات بشكل صحيح قبل التحويل' : '⚠️ Copy the details carefully before transferring'}
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">{t('amount')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium">{lang === 'ar' ? 'المبلغ' : 'Amount'}</label>
                   <div className="flex gap-2">
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="1" placeholder="0.00" className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors" />
-                    <select value={currency} onChange={e => setCurrency(e.target.value as Currency)} className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors">
-                      <option value="USD">USD $</option>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      required min="1"
+                      placeholder="0.00"
+                      className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    <select value={currency} onChange={e => setCurrency(e.target.value as Currency)}
+                      className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors">
                       <option value="SYP">SYP ل.س</option>
+                      <option value="USD">USD $</option>
                       <option value="EUR">EUR €</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setStep(1)} className="flex-1 py-3 bg-card border border-border text-sm font-semibold rounded-xl hover:bg-background transition-colors">
-                    Back
+                  <button type="button" onClick={() => setStep(1)}
+                    className="flex-1 py-3 bg-card border border-border text-sm font-semibold rounded-xl hover:bg-background transition-colors">
+                    {lang === 'ar' ? 'رجوع' : 'Back'}
                   </button>
-                  <button type="button" onClick={() => setStep(3)} disabled={!amount || parseFloat(amount) <= 0} className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-xl shadow-primary/30">
-                    Continue
+                  <button type="button" onClick={() => setStep(3)} disabled={!amount || parseFloat(amount) <= 0}
+                    className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-xl shadow-primary/30">
+                    {lang === 'ar' ? 'التالي' : 'Continue'}
                   </button>
                 </div>
               </motion.div>
             )}
 
+            {/* Step 3: Transaction Proof */}
             {step === 3 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <h2 className="font-heading font-bold">Upload Screenshot</h2>
-                <p className="text-muted-foreground text-sm">Upload a screenshot of your transfer confirmation</p>
-                <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-primary/40 transition-colors">
-                  <Upload size={32} className="mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">Upload your transfer screenshot</p>
-                  <input type="text" value={screenshotUrl} onChange={e => setScreenshotUrl(e.target.value)} placeholder="Or paste screenshot URL here" className="mt-3 w-full px-3 py-2 bg-card border border-border rounded-xl text-xs focus:outline-none focus:border-primary/50 transition-colors text-center" />
+                <h2 className="font-heading font-bold">{lang === 'ar' ? 'إثبات التحويل' : 'Transfer Proof'}</h2>
+                <p className="text-muted-foreground text-sm">
+                  {lang === 'ar' ? 'أدخل رقم العملية وارفع صورة إثبات التحويل لمراجعتها من الإدارة' : 'Enter the transaction number and upload a screenshot for admin review'}
+                </p>
+
+                {/* Transaction Reference */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Hash size={15} className="text-primary" />
+                    {lang === 'ar' ? 'رقم العملية / Transaction ID' : 'Transaction Reference'}
+                  </label>
+                  <input
+                    type="text"
+                    value={transactionRef}
+                    onChange={e => setTransactionRef(e.target.value)}
+                    placeholder={lang === 'ar' ? 'مثال: TXN123456789' : 'e.g. TXN123456789'}
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 transition-colors font-mono"
+                    required
+                  />
                 </div>
 
+                {/* Screenshot Upload */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <ImageIcon size={15} className="text-primary" />
+                    {lang === 'ar' ? 'صورة إثبات التحويل' : 'Transfer Screenshot'}
+                  </label>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+
+                  {screenshotFile ? (
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-primary/40 bg-card">
+                      <img src={screenshotFile} alt="screenshot" className="w-full h-48 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => { setScreenshotFile(null); setScreenshotName(''); }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
+                      >
+                        <X size={14} className="text-white" />
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-3 py-2">
+                        <p className="text-white text-xs truncate">{screenshotName}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => fileInputRef.current?.click()}
+                      className="w-full border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-primary/40 transition-colors flex flex-col items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <Upload size={24} className="text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{lang === 'ar' ? 'اضغط لرفع الصورة' : 'Click to upload'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === 'ar' ? 'JPG، PNG، حتى 5MB' : 'JPG, PNG, up to 5MB'}</p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+
+                {/* Summary */}
                 <div className="bg-card border border-border rounded-xl p-4 text-sm space-y-2">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span className="font-medium">{methodInfo[method].name}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium">{currency} {amount}</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{lang === 'ar' ? 'طريقة الدفع' : 'Method'}</span>
+                    <span className="font-medium">{lang === 'ar' ? selectedMethod.nameAr : selectedMethod.nameEn}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{lang === 'ar' ? 'المبلغ' : 'Amount'}</span>
+                    <span className="font-medium">{currency} {amount}</span>
+                  </div>
+                  {transactionRef && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{lang === 'ar' ? 'رقم العملية' : 'Ref'}</span>
+                      <span className="font-mono text-xs text-primary">{transactionRef}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setStep(2)} className="flex-1 py-3 bg-card border border-border text-sm font-semibold rounded-xl hover:bg-background transition-colors">
-                    Back
+                  <button type="button" onClick={() => setStep(2)}
+                    className="flex-1 py-3 bg-card border border-border text-sm font-semibold rounded-xl hover:bg-background transition-colors">
+                    {lang === 'ar' ? 'رجوع' : 'Back'}
                   </button>
-                  <button type="submit" disabled={createPayment.isPending} className="flex-1 py-3 flex items-center justify-center gap-2 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-xl shadow-primary/30">
+                  <button type="submit" disabled={createPayment.isPending || !transactionRef || !screenshotFile}
+                    className="flex-1 py-3 flex items-center justify-center gap-2 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-xl shadow-primary/30">
                     {createPayment.isPending ? <Loader2 size={18} className="animate-spin" /> : null}
-                    {t('submit')}
+                    {lang === 'ar' ? 'إرسال الطلب' : 'Submit Request'}
                   </button>
                 </div>
               </motion.div>
