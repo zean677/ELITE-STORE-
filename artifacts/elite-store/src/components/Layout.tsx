@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, ShoppingBag, Package, Wallet, Bell, User, Settings,
   ChevronDown, Menu, X, Shield, BarChart2, Users, CreditCard,
-  LogOut, Layers, ChevronRight, MessageCircle, Users2
+  LogOut, Layers, ChevronRight, MessageCircle, Users2, Coins
 } from 'lucide-react';
 
 const WHATSAPP_NUMBER = '963992718483';
@@ -125,6 +125,11 @@ export function PublicLayout({ children }: LayoutProps) {
 
               {user ? (
                 <>
+                  {/* Wallet Balance */}
+                  <Link href="/wallet" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors">
+                    <Coins size={13} className="text-secondary" />
+                    <span className="text-xs font-bold text-secondary">${parseFloat(user.balance?.toString() ?? '0').toFixed(2)}</span>
+                  </Link>
                   <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
                     <Bell size={18} className="text-muted-foreground" />
                     {unreadCount > 0 && (
@@ -221,6 +226,7 @@ export function DashboardLayout({ children }: LayoutProps) {
     { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
     { href: '/admin/users', icon: Users, label: 'Users' },
     { href: '/admin/products', icon: Layers, label: 'Products' },
+    { href: '/admin/settings', icon: Settings, label: 'الإعدادات' },
   ];
 
   const isAdmin = user?.role === 'admin';

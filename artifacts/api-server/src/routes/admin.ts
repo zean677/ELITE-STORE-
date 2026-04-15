@@ -1,10 +1,15 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, ordersTable, paymentsTable, productsTable, walletTransactionsTable, notificationsTable } from "@workspace/db";
+import { db, usersTable, ordersTable, paymentsTable, productsTable, walletTransactionsTable, notificationsTable, settingsTable } from "@workspace/db";
 import { eq, desc, and, count, sum, gte, sql, like } from "drizzle-orm";
 import { requireAdmin, AuthRequest } from "../lib/auth";
 import { VerifyPaymentBody, GetAdminOrdersQueryParams, GetAdminPaymentsQueryParams, GetAdminUsersQueryParams, UpdateUserBalanceBody, SuspendUserBody } from "@workspace/api-zod";
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "../lib/logger";
+
+async function getSettingValue(key: string, defaultVal: string): Promise<string> {
+  const [row] = await db.select().from(settingsTable).where(eq(settingsTable.key, key));
+  return row?.value ?? defaultVal;
+}
 
 const router: IRouter = Router();
 
@@ -316,6 +321,13 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
     return;
   }
 
+  // Get profit margin from settings (or use override from request body)
+  const savedMargin = await getSettingValue("default_profit_margin", "10");
+  const profitMarginPct = req.body?.profit_margin !== undefined
+    ? parseFloat(req.body.profit_margin)
+    : parseFloat(savedMargin);
+  const profitMultiplier = 1 + profitMarginPct / 100;
+
   let synced = 0;
   let failed = 0;
   let skipped = 0;
@@ -380,12 +392,14 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
         const qtyMin = p.qty_values?.min ?? null;
         const qtyMax = p.qty_values?.max ?? null;
 
-        // For "amount" type, effective price = unit_price * min_qty
-        // For package/stock types, price is fixed per product
-        const effectivePrice =
+        // Base price before profit
+        const basePrice =
           p.product_type === "amount" && qtyMin && qtyMin > 0
             ? unitPrice * qtyMin
             : unitPrice;
+
+        // Apply profit margin
+        const effectivePrice = parseFloat((basePrice * profitMultiplier).toFixed(6));
 
         await db
           .insert(productsTable)
@@ -401,7 +415,7 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
             unitPriceUsd: String(unitPrice),
             requiredFields: p.params ?? [],
             status: p.available ? "active" : "inactive",
-            profitMargin: "10",
+            profitMargin: String(profitMarginPct),
             productType: p.product_type ?? "package",
             qtyMin: qtyMin !== null ? String(qtyMin) : null,
             qtyMax: qtyMax !== null ? String(qtyMax) : null,
@@ -415,6 +429,7 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
               status: p.available ? "active" : "inactive",
               requiredFields: p.params ?? [],
               productType: p.product_type ?? "package",
+              profitMargin: String(profitMarginPct),
               qtyMin: qtyMin !== null ? String(qtyMin) : null,
               qtyMax: qtyMax !== null ? String(qtyMax) : null,
             },
