@@ -313,8 +313,79 @@ router.patch("/admin/users/:id/suspend", requireAdmin, async (req: AuthRequest, 
   });
 });
 
+router.post("/admin/sync/ahminix", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
+  const apiKey = (await getSettingValue("ahminix_api_key", "")) || process.env.AHMINIX_API_KEY || "";
+
+  if (!apiKey) {
+    res.status(500).json({ error: "AHMINIX_API_KEY not configured. Add it in Admin Settings → API Providers." });
+    return;
+  }
+
+  const baseUrl = await getSettingValue("ahminix_base_url", "https://store.ahminix.com/client/api/");
+  const savedMargin = await getSettingValue("default_profit_margin", "10");
+  const profitMarginPct = req.body?.profit_margin !== undefined ? parseFloat(req.body.profit_margin) : parseFloat(savedMargin);
+  const profitMultiplier = 1 + profitMarginPct / 100;
+
+  let synced = 0, failed = 0;
+
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/products`, {
+      method: "GET",
+      headers: { "api-key": apiKey.trim(), "Accept": "application/json" },
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      res.status(502).json({ error: `AHMINIX API returned ${response.status}`, detail: body });
+      return;
+    }
+
+    const products: any[] = await response.json();
+
+    for (const p of products) {
+      try {
+        const productId = `ahminix_${p.id}`;
+        const price = typeof p.price === "number" ? p.price : parseFloat(String(p.price ?? 0));
+        const finalPrice = parseFloat((price * profitMultiplier).toFixed(6));
+
+        await db.insert(productsTable).values({
+          id: productId,
+          name: p.name ?? `Product ${p.id}`,
+          nameAr: p.name ?? null,
+          description: p.description ?? null,
+          category: "general",
+          provider: "ahminix",
+          providerProductId: String(p.id),
+          priceUsd: String(finalPrice),
+          unitPriceUsd: String(price),
+          requiredFields: p.params ?? [],
+          status: p.available !== false ? "active" : "inactive",
+          profitMargin: String(profitMarginPct),
+          productType: p.product_type ?? "package",
+          qtyMin: null,
+          qtyMax: null,
+        }).onConflictDoUpdate({
+          target: productsTable.id,
+          set: { name: p.name, priceUsd: String(finalPrice), unitPriceUsd: String(price), status: p.available !== false ? "active" : "inactive", requiredFields: p.params ?? [], profitMargin: String(profitMarginPct) },
+        });
+        synced++;
+      } catch (err) {
+        logger.error({ err, productId: p.id }, "Failed to upsert AHMINIX product");
+        failed++;
+      }
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch from AHMINIX");
+    res.status(502).json({ error: "Failed to connect to AHMINIX API" });
+    return;
+  }
+
+  res.json({ synced, failed, message: `Synced ${synced} products from AHMINIX` });
+});
+
 router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
-  const SHAMS_TOKEN = process.env.SHAMS4STORE_API_TOKEN;
+  const SHAMS_TOKEN = (await getSettingValue("shams4store_api_token", "")) || process.env.SHAMS4STORE_API_TOKEN;
 
   if (!SHAMS_TOKEN) {
     res.status(500).json({ error: "SHAMS4STORE_API_TOKEN is not configured" });

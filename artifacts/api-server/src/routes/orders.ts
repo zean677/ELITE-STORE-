@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, productsTable, usersTable, walletTransactionsTable, notificationsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, usersTable, walletTransactionsTable, notificationsTable, settingsTable } from "@workspace/db";
 import { eq, desc, and, count, sql } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "../lib/auth";
 import { CreateOrderBody, GetOrdersQueryParams, GetOrderParams } from "@workspace/api-zod";
@@ -13,6 +13,81 @@ const CURRENCY_RATES: Record<string, number> = {
   SYP: 13000,
   EUR: 0.92,
 };
+
+async function getSettingVal(key: string, def: string): Promise<string> {
+  const [row] = await db.select().from(settingsTable).where(eq(settingsTable.key, key));
+  return row?.value ?? def;
+}
+
+async function dispatchToProvider(order: any, product: any): Promise<{ success: boolean; providerOrderId?: string; error?: string }> {
+  try {
+    const provider = product.provider ?? "manual";
+
+    if (provider === "shams4store") {
+      const token = await getSettingVal("shams4store_api_token", process.env.SHAMS4STORE_API_TOKEN ?? "");
+      if (!token) return { success: false, error: "SHAMS4STORE API token not configured" };
+
+      const baseUrl = await getSettingVal("shams4store_base_url", "https://api.shams4store.com/client/api/");
+      const providerProductId = product.providerProductId;
+
+      const body: Record<string, any> = {
+        order_uuid: order.id,
+        playerId: order.playerId ?? "",
+        qty: order.qty,
+      };
+
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
+        method: "POST",
+        headers: { "api-token": token.trim(), "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        return { success: false, error: `Provider returned ${response.status}: ${text.slice(0, 200)}` };
+      }
+
+      const data = await response.json();
+      return { success: true, providerOrderId: String(data?.order_id ?? data?.id ?? order.id) };
+    }
+
+    if (provider === "ahminix") {
+      const apiKey = await getSettingVal("ahminix_api_key", process.env.AHMINIX_API_KEY ?? "");
+      if (!apiKey) return { success: false, error: "AHMINIX API key not configured" };
+
+      const baseUrl = await getSettingVal("ahminix_base_url", "https://store.ahminix.com/client/api/");
+      const providerProductId = product.providerProductId;
+
+      const body: Record<string, any> = {
+        qty: order.qty,
+        playerId: order.playerId ?? "",
+        order_uuid: order.id,
+      };
+
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
+        method: "POST",
+        headers: { "api-key": apiKey.trim(), "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        return { success: false, error: `Provider returned ${response.status}: ${text.slice(0, 200)}` };
+      }
+
+      const data = await response.json();
+      return { success: true, providerOrderId: String(data?.order_id ?? data?.id ?? order.id) };
+    }
+
+    // Manual products — admin processes manually
+    return { success: true, providerOrderId: order.id };
+  } catch (err: any) {
+    logger.error({ err, orderId: order.id }, "Provider dispatch failed");
+    return { success: false, error: err?.message ?? "Unknown error" };
+  }
+}
 
 router.get("/orders", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const qp = GetOrdersQueryParams.safeParse(req.query);
@@ -116,6 +191,25 @@ router.post("/orders", requireAuth, async (req: AuthRequest, res): Promise<void>
   });
 
   logger.info({ orderId, userId: req.user!.id, productId }, "Order created");
+
+  // Dispatch to provider in the background (non-blocking)
+  dispatchToProvider(order, product).then(async (result) => {
+    if (result.success) {
+      await db.update(ordersTable).set({ status: "completed", providerOrderId: result.providerOrderId ?? null, updatedAt: new Date() }).where(eq(ordersTable.id, orderId));
+      await db.insert(notificationsTable).values({
+        userId: req.user!.id,
+        type: "order_completed",
+        title: "تم إتمام الطلب",
+        message: `تم تنفيذ طلبك لـ ${product.name} (x${qty}) بنجاح.`,
+        isRead: false,
+      });
+    } else {
+      await db.update(ordersTable).set({ status: "failed", updatedAt: new Date() }).where(eq(ordersTable.id, orderId));
+      logger.warn({ orderId, error: result.error }, "Provider dispatch failed, order marked failed");
+    }
+  }).catch((err) => {
+    logger.error({ err, orderId }, "Background provider dispatch threw");
+  });
 
   res.status(201).json({ ...order, totalPrice: parseFloat(order.totalPrice ?? "0") });
 });
