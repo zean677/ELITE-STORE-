@@ -348,29 +348,58 @@ export function DashboardLayout({ children }: LayoutProps) {
 
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen pb-20 lg:pb-0">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-xl lg:hidden">
-          <div className="flex items-center justify-between h-14 px-4" dir="rtl">
-            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-card transition-colors">
-              <Menu size={20} />
-            </button>
-            <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/97 backdrop-blur-xl lg:hidden" style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="flex items-center justify-between h-14 px-3 gap-2" dir="rtl">
+            {/* Right side: Logo */}
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/40">
+                <span className="text-white font-black text-sm">E</span>
+              </div>
+              <span className="font-bold text-sm tracking-tight font-heading hidden xs:block">ELITE STORE</span>
+            </Link>
+
+            {/* Left side: controls */}
+            <div className="flex items-center gap-1.5 mr-auto">
+              {/* Balance */}
               {user && (
-                <Link href="/deposit" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 transition-colors">
-                  <span className="text-green-400 text-xs font-bold">+</span>
-                  <span className="text-xs font-bold text-white">{balanceSYP} ل.س</span>
+                <Link href="/deposit"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-colors"
+                >
+                  <span className="text-primary text-xs font-bold">+</span>
+                  <span className="text-xs font-bold text-white">{balanceSYP}</span>
+                  <span className="text-[10px] text-primary/80 font-medium">ل.س</span>
                 </Link>
               )}
-              <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
+
+              {/* Bell */}
+              <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-card transition-colors">
                 <Bell size={18} className="text-muted-foreground" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
                 )}
               </Link>
+
+              {/* User Badge */}
               {user && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <span className="text-white text-xs font-black">{user.username[0].toUpperCase()}</span>
-                </div>
+                <Link href="/profile">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg relative"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, #4f87ff, #1a3fa0)',
+                      boxShadow: '0 0 0 2px rgba(59,130,246,0.4), 0 4px 12px rgba(30,58,138,0.5)',
+                    }}>
+                    <span className="text-white text-xs font-black">{user.username[0].toUpperCase()}</span>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border border-background"
+                      style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }} />
+                  </div>
+                </Link>
               )}
+
+              {/* Hamburger */}
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl hover:bg-card transition-colors">
+                <Menu size={20} />
+              </button>
             </div>
           </div>
         </header>

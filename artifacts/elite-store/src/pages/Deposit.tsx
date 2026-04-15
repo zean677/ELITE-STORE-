@@ -202,32 +202,71 @@ export default function Deposit() {
             {/* Step 1: Choose Payment Method */}
             {step === 1 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <h2 className="font-heading font-bold">{lang === 'ar' ? 'اختر طريقة الشحن' : 'Select Payment Method'}</h2>
+                <div className="text-center">
+                  <h2 className="font-heading font-bold text-lg">{lang === 'ar' ? 'اختر طريقة الشحن' : 'Select Payment Method'}</h2>
+                  <p className="text-xs text-muted-foreground mt-1">{lang === 'ar' ? 'إدخال كود الشحن' : 'Enter charge code'}</p>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
-                  {Object.entries(METHODS).map(([key, info]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setMethod(key)}
-                      className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${method === key ? 'border-2 bg-card' : 'border border-border bg-card/50 hover:border-border/80'}`}
-                      style={{ borderColor: method === key ? info.color : undefined }}
-                    >
-                      {method === key && (
-                        <div className="absolute top-1.5 left-1.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: info.color }}>
-                          <CheckCircle size={10} className="text-white" />
+                  {Object.entries(METHODS).map(([key, info], idx) => {
+                    const selected = method === key;
+                    return (
+                      <motion.button
+                        key={key}
+                        type="button"
+                        onClick={() => setMethod(key)}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all overflow-hidden"
+                        style={{
+                          background: selected
+                            ? `linear-gradient(145deg, ${info.color}33, ${info.color}18)`
+                            : 'linear-gradient(145deg, #1a1a2e, #16213e)',
+                          border: selected ? `2px solid ${info.color}` : '2px solid #2a2a40',
+                          boxShadow: selected ? `0 0 20px ${info.color}30` : '0 4px 12px rgba(0,0,0,0.4)',
+                        }}
+                      >
+                        {/* Stars decoration */}
+                        <div className="absolute top-1 left-1">
+                          <span className="text-yellow-400/60 text-[8px]">★</span>
                         </div>
-                      )}
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border border-border/50"
-                        style={{ background: `${info.color}18` }}>
-                        {info.emoji}
-                      </div>
-                      <span className="text-[11px] font-semibold text-center leading-tight">{lang === 'ar' ? info.nameAr : info.nameEn}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: info.type === 'auto' ? '#22c55e22' : '#f59e0b22', color: info.type === 'auto' ? '#22c55e' : '#f59e0b' }}>
-                        {info.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
-                      </span>
-                    </button>
-                  ))}
+                        <div className="absolute top-1 right-1">
+                          <span className="text-yellow-400/60 text-[8px]">★</span>
+                        </div>
+
+                        {/* Selected check */}
+                        {selected && (
+                          <div className="absolute top-2 left-2 w-4 h-4 rounded-full flex items-center justify-center z-10"
+                            style={{ background: info.color }}>
+                            <CheckCircle size={10} className="text-white" />
+                          </div>
+                        )}
+
+                        {/* Icon */}
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl relative"
+                          style={{
+                            background: `radial-gradient(circle at 35% 35%, ${info.color}40, ${info.color}10)`,
+                            border: `1px solid ${info.color}40`,
+                          }}>
+                          {info.emoji}
+                        </div>
+
+                        <span className="text-[10px] font-bold text-center leading-tight text-white/90">
+                          {lang === 'ar' ? info.nameAr : info.nameEn}
+                        </span>
+
+                        <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
+                          style={{
+                            background: info.type === 'auto' ? '#22c55e20' : '#f59e0b20',
+                            color: info.type === 'auto' ? '#22c55e' : '#f59e0b',
+                            border: `1px solid ${info.type === 'auto' ? '#22c55e40' : '#f59e0b40'}`,
+                          }}>
+                          {info.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
                 <button type="button" onClick={() => setStep(2)}
                   className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-xl shadow-primary/30">

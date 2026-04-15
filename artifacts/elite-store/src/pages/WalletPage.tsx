@@ -68,6 +68,14 @@ export default function WalletPage() {
   const filteredTx = transactions.filter(tx => {
     if (tab === 1 && tx.type !== 'purchase') return false;
     if (tab === 2 && tx.type !== 'refund') return false;
+    if (fromDate) {
+      const txDate = new Date(tx.createdAt).toISOString().slice(0, 10);
+      if (txDate < fromDate) return false;
+    }
+    if (toDate) {
+      const txDate = new Date(tx.createdAt).toISOString().slice(0, 10);
+      if (txDate > toDate) return false;
+    }
     return true;
   });
 
