@@ -419,25 +419,106 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
   let failed = 0;
   let skipped = 0;
 
-  const categoryMap: Record<string, string> = {
-    "التطبيقات": "services",
-    "Applications": "services",
-    "ألعاب الهاتف": "mobile_games",
-    "Mobile Games": "mobile_games",
-    "ألعاب الكمبيوتر": "pc_games",
-    "PC Games": "pc_games",
-    "بطاقات هدية": "gift_cards",
-    "Gift Cards": "gift_cards",
-  };
-
   function mapCategory(catName: string): string {
-    for (const [key, val] of Object.entries(categoryMap)) {
-      if (catName.toLowerCase().includes(key.toLowerCase())) return val;
-    }
-    if (catName.toLowerCase().includes("game") || catName.toLowerCase().includes("pubg") || catName.toLowerCase().includes("free fire") || catName.toLowerCase().includes("clash")) return "mobile_games";
-    if (catName.toLowerCase().includes("steam") || catName.toLowerCase().includes("pc")) return "pc_games";
-    if (catName.toLowerCase().includes("card") || catName.toLowerCase().includes("gift") || catName.toLowerCase().includes("itunes") || catName.toLowerCase().includes("google")) return "gift_cards";
-    return "general";
+    const n = catName.toLowerCase().trim();
+
+    // ── Gift Cards ──────────────────────────────────────────────────────────
+    const giftCardKeywords = [
+      "steam", "xbox", "playstation", "nintendo", "google play", "itunes",
+      "amazon card", "gamestop", "blizzard card", "فيزا", "visa",
+    ];
+    if (giftCardKeywords.some(k => n.includes(k))) return "gift_cards";
+
+    // ── PC Games ─────────────────────────────────────────────────────────────
+    const pcGameKeywords = [
+      "league of legends", "valorant", "overwatch",
+    ];
+    if (pcGameKeywords.some(k => n.includes(k))) return "pc_games";
+
+    // ── Services ─────────────────────────────────────────────────────────────
+    // Applications category
+    if (n === "التطبيقات" || n === "applications") return "services";
+
+    // VPN
+    if (n.includes("vpn")) return "services";
+
+    // Streaming & media
+    const streamingKeywords = [
+      "netflix", "spotify", "youtube premium", "apple tv", "apple music",
+      "wetv", "crunchyroll", "shahid", "amazon prime", "osn", "ip tv", "iptv",
+      "deezer", "filmix", "zain 4k", "look 4k", "blue 4k", "shamna tv",
+      "picsart", "capcut", "canva", "invideo", "flaticon",
+    ];
+    if (streamingKeywords.some(k => n.includes(k))) return "services";
+
+    // Social / live streaming apps
+    const socialKeywords = [
+      "telegram", "snapchat", "imo ", "momo ", "gomeet", "غوميت",
+      "ميو لايف", "meyo", "livu", "ليف يو", "mixu", "ميكس يو",
+      "hicat", "هاي كات", "yalla live", "يلا لايف", "weplay", "وي بلاي",
+      "كملنا", "كوينز", "zepeto", "chatgpt", "gemini", "الذكاء الاصطناعي",
+    ];
+    if (socialKeywords.some(k => n.includes(k))) return "services";
+
+    // Reactions / boosts / phone numbers
+    if (n.startsWith("رشق") || n.includes("ارقام")) return "services";
+
+    // Telecom / operator services
+    const telecomKeywords = [
+      "ليرات", "فئات جاهزة", "الرصيد والاتصالات", "خدمات سيريتل",
+      "خدمات mtn", "خدمات شام", "خدمات عامة", "alfa", "باقات",
+      "أيام صلاحية", "مزود", "خدمات mtن",
+    ];
+    if (telecomKeywords.some(k => n.includes(k))) return "services";
+
+    // VIP / membership / subscriptions (non-game)
+    if (n.includes("مستويات vip") || n.includes("vip") && !n.includes("mobile") && !n.includes("legend")) return "services";
+
+    // iCloud / crypto / AI
+    if (n.includes("ايكلود") || n.includes("icloud")) return "services";
+    if (n.includes("العملات الرقمية")) return "services";
+
+    // ── Mobile Games ─────────────────────────────────────────────────────────
+    const mobileGameKeywords = [
+      "pubg", "ببجي", "free fire", "فري فاير", "شدات", "ألماس",
+      "mobile legend", "mobile legends", "magic chess",
+      "clash", "roblox", "minecraft", "genshin", "honkai", "zenless",
+      "wuthering", "star rail", "blood strike", "arena breakout",
+      "wild rift", "age of empire", "ragnarok", "arknights",
+      "war robot", "lords mobile", "last war", "whiteout", "state of survival",
+      "stumble guys", "marvel", "dragon", "arena of valor",
+      "ludo", "puzzle", "idle", "مغلفات", "جواكر",
+      "solo leveling", "etheria", "frag pro", "devil may cry",
+      "tarisland", "haikyu", "cats:", "pixel gun", "eggy party",
+      "star resonance", "harry potter", "overmortal", "once human",
+      "age of magic", "moonlight blade", "modern warship", "mwt",
+      "black clover", "blockman", "modern strike", "acecraft",
+      "crossfire", "crystal of atlan", "heartopia", "silver and blood",
+      "rainbow six", "dragon nest", "super sus", "life after",
+      "sword of justice", "oxide:", "farlight", "afk journey",
+      "crossout", "honor of kings", "revenge of sultan", "eve echoes",
+      "knives out", "heaven burns", "echocalypse", "duet night",
+      "deadly dudes", "winjoy", "guns of glory", "hero clash",
+      "snowbreak", "maplestory", "watcher of realm", "onmyoji",
+      "destiny rising", "mecha break", "8ball", "8 ball",
+      "stormshot", "piggy go", "identity v", "city of crime",
+      "tiles survive", "sea of conquest", "asphalt", "نداء الحرب",
+      "rise of the king", "king of avalon", "war robot", "brawl",
+      "brawel", "football rising", "fortnite", "the walking dead",
+      "merge kingdom", "mobile royale", "dragonheir", "pure sniper",
+      "undawn", "garena", "legend of the phoenix", "bleach:",
+      "legend of neverland", "legend of neverland", "project entropy",
+      "age of empires mobile", "ببجي روبوت", "عضويات ببجي",
+      "عضويات فري فاير", "فري فاير اكواد", "ألماس",
+      "yalla ludo", "يلا لودو",
+    ];
+    if (mobileGameKeywords.some(k => n.includes(k))) return "mobile_games";
+
+    // Fallback: if the name looks like a game title (Latin/English characters with
+    // common game patterns), treat as mobile_games
+    if (/^[a-z0-9\s:\-\.!'&]+$/i.test(catName.trim())) return "mobile_games";
+
+    return "services";
   }
 
   try {
@@ -511,6 +592,7 @@ router.post("/admin/products", requireAdmin, async (req: AuthRequest, res): Prom
             target: productsTable.id,
             set: {
               name: p.name,
+              category,
               priceUsd: String(effectivePrice),
               unitPriceUsd: String(unitPrice),
               status: p.available ? "active" : "inactive",
