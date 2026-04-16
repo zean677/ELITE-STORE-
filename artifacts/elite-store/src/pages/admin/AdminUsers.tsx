@@ -18,6 +18,7 @@ export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const [balanceModal, setBalanceModal] = useState<{ id: number; username: string; balance: string } | null>(null);
   const [newBalance, setNewBalance] = useState('');
+  const [balanceOp, setBalanceOp] = useState<'add' | 'subtract' | 'set'>('add');
   const [updatingBalance, setUpdatingBalance] = useState(false);
   const { toast } = useToast();
 
@@ -41,9 +42,9 @@ export default function AdminUsers() {
     setUpdatingBalance(true);
     try {
       const res = await fetch(`${BASE}/api/admin/users/${balanceModal.id}/balance`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({ balance: parseFloat(newBalance) }),
+        body: JSON.stringify({ operation: balanceOp, amount: parseFloat(newBalance) }),
       });
       if (!res.ok) throw new Error(await res.text());
       toast({ title: '✅ تم تحديث الرصيد' });
@@ -163,16 +164,49 @@ export default function AdminUsers() {
         {balanceModal && (
           <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setBalanceModal(null)}>
             <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()} dir="rtl">
-              <h3 className="font-bold text-white mb-1">تعديل الرصيد</h3>
-              <p className="text-sm text-gray-400 mb-4">المستخدم: {balanceModal.username}</p>
-              <label className="text-xs text-gray-400 mb-1 block">الرصيد الجديد (USD)</label>
-              <input type="number" step="0.01" value={newBalance} onChange={e => setNewBalance(e.target.value)}
-                className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-white text-sm mb-4 focus:outline-none focus:border-primary/50" />
+              <h3 className="font-bold text-white mb-1">تعديل رصيد المستخدم</h3>
+              <p className="text-sm text-gray-400 mb-1">{balanceModal.username}</p>
+              <p className="text-xs text-green-400 mb-4">الرصيد الحالي: ${parseFloat(balanceModal.balance || '0').toFixed(2)}</p>
+
+              <label className="text-xs text-gray-400 mb-2 block">نوع العملية</label>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {([
+                  { val: 'add', label: '+ إضافة', color: '#22c55e' },
+                  { val: 'subtract', label: '− خصم', color: '#ef4444' },
+                  { val: 'set', label: '= تحديد', color: '#6C5CE7' },
+                ] as const).map(op => (
+                  <button
+                    key={op.val}
+                    type="button"
+                    onClick={() => setBalanceOp(op.val)}
+                    className="py-2 rounded-xl text-xs font-bold border-2 transition-all"
+                    style={{
+                      borderColor: balanceOp === op.val ? op.color : '#2a2a40',
+                      color: balanceOp === op.val ? op.color : '#666',
+                      background: balanceOp === op.val ? `${op.color}18` : 'transparent',
+                    }}
+                  >
+                    {op.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="text-xs text-gray-400 mb-1 block">
+                {balanceOp === 'add' ? 'مبلغ الإضافة (USD)' : balanceOp === 'subtract' ? 'مبلغ الخصم (USD)' : 'الرصيد الجديد (USD)'}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={newBalance}
+                onChange={e => setNewBalance(e.target.value)}
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-white text-sm mb-4 focus:outline-none focus:border-primary/50"
+              />
               <div className="flex gap-3">
-                <button onClick={handleUpdateBalance} disabled={updatingBalance}
+                <button onClick={handleUpdateBalance} disabled={updatingBalance || !newBalance}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}>
-                  {updatingBalance ? 'جاري...' : 'حفظ'}
+                  {updatingBalance ? 'جاري...' : 'تطبيق'}
                 </button>
                 <button onClick={() => setBalanceModal(null)} className="px-5 py-2.5 rounded-xl text-sm text-gray-400 border border-border">إلغاء</button>
               </div>

@@ -13,7 +13,10 @@ export default function AdminPayments() {
   const [screenshotModal, setScreenshotModal] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const { data, refetch, isLoading } = useGetAdminPayments({ status: status || undefined } as any);
+  const { data, refetch, isLoading } = useGetAdminPayments(
+    { status: status || undefined } as any,
+    { query: { refetchOnMount: 'always', refetchInterval: 15000, staleTime: 0 } } as any,
+  );
   const verifyPayment = useVerifyPayment();
 
   const payments = (Array.isArray(data) ? data : []) as any[];
