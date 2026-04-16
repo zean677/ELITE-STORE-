@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'wouter';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useSearch } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGetProducts, useGetCategories } from '@workspace/api-client-react';
 import { PublicLayout } from '@/components/Layout';
@@ -328,11 +328,24 @@ function CategoryTab({ cat, active, onClick }: { cat: any; active: boolean; onCl
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Products() {
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('');
+  const searchStr = useSearch();
+  const urlParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
+
+  const [search, setSearch] = useState(() => urlParams.get('q') || '');
+  const [activeCategory, setActiveCategory] = useState(() => urlParams.get('category') || '');
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const { lang } = useLanguage();
+
+  // Sync URL params when they change (e.g. navigating from home page)
+  useEffect(() => {
+    const cat = urlParams.get('category') || '';
+    const q = urlParams.get('q') || '';
+    setActiveCategory(cat);
+    setSearch(q);
+    setSelectedGame(null);
+    setPage(1);
+  }, [searchStr]);
 
   const { data: categoriesData } = useGetCategories();
 

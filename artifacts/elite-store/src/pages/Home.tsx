@@ -45,7 +45,7 @@ const CATEGORIES_FALLBACK = [
     id: 'social',
     nameAr: 'السوشيال ميديا',
     nameEn: 'Social Media',
-    href: '/products?category=general&q=social',
+    href: '/products?category=services&q=social',
     color: '#3b82f6',
     bg: 'linear-gradient(145deg, #001030, #002060)',
     icons: [
@@ -59,7 +59,7 @@ const CATEGORIES_FALLBACK = [
     id: 'telecom',
     nameAr: 'الرصيد والاتصالات',
     nameEn: 'Telecom',
-    href: '/products?category=general&q=telecom',
+    href: '/products?category=services/products?category=general&q=telecomq=telecom',
     color: '#ef4444',
     bg: 'linear-gradient(145deg, #200010, #400020)',
     icons: [
@@ -87,7 +87,7 @@ const CATEGORIES_FALLBACK = [
     id: 'crypto',
     nameAr: 'العملات الرقمية',
     nameEn: 'Crypto',
-    href: '/products?category=general&q=crypto',
+    href: '/products?category=services/products?category=general&q=cryptoq=crypto',
     color: '#f59e0b',
     bg: 'linear-gradient(145deg, #201500, #403000)',
     icons: [
@@ -157,7 +157,7 @@ const CATEGORIES_FALLBACK = [
     id: 'accounts',
     nameAr: 'الأرقام',
     nameEn: 'Numbers',
-    href: '/products?category=general&q=numbers',
+    href: '/products?category=services/products?category=general&q=numbersq=numbers',
     color: '#34d399',
     bg: 'linear-gradient(145deg, #001510, #003020)',
     icons: [
@@ -171,7 +171,7 @@ const CATEGORIES_FALLBACK = [
     id: 'wholesale',
     nameAr: 'الحسابات الجامعة',
     nameEn: 'Wholesale',
-    href: '/products?category=general&q=accounts',
+    href: '/products?category=services/products?category=general&q=accountsq=accounts',
     color: '#fb923c',
     bg: 'linear-gradient(145deg, #201005, #402010)',
     icons: [
