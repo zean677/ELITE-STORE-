@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/i18n';
 import { Loader2, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Logo } from '@/components/Logo';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -36,11 +37,8 @@ export default function Login() {
 
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <span className="text-white font-black">E</span>
-            </div>
-            <span className="font-heading font-bold text-xl">ELITE STORE</span>
+          <Link href="/" className="inline-flex items-center justify-center mb-6">
+            <Logo size={48} withText={true} />
           </Link>
           <h1 className="font-heading text-2xl font-bold">{t('login')}</h1>
           <p className="text-muted-foreground text-sm mt-2">أهلاً بك مجدداً</p>

@@ -185,7 +185,7 @@ const CATEGORIES_FALLBACK = [
     id: 'accounts',
     nameAr: 'الأرقام',
     nameEn: 'Numbers',
-    href: '/products?category=services/products?category=general&q=numbersq=numbers',
+    href: '/products?category=general&q=numbers',
     color: '#34d399',
     bg: 'linear-gradient(145deg, #001510, #003020)',
     icons: [
@@ -199,7 +199,7 @@ const CATEGORIES_FALLBACK = [
     id: 'wholesale',
     nameAr: 'الحسابات الجامعة',
     nameEn: 'Wholesale',
-    href: '/products?category=services/products?category=general&q=accountsq=accounts',
+    href: '/products?category=general&q=accounts',
     color: '#fb923c',
     bg: 'linear-gradient(145deg, #201005, #402010)',
     icons: [

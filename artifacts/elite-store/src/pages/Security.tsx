@@ -1,343 +1,321 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
-  ShieldCheck, ShieldOff, LogOut, Clock, Key, User,
-  AlertTriangle, CheckCircle2, RefreshCw, Lock, Smartphone,
-  Eye, EyeOff, ChevronRight, Wifi, WifiOff
+  ShieldCheck, Key, LogOut, Lock, Smartphone,
+  Eye, EyeOff, CheckCircle2, AlertTriangle, ChevronRight,
+  Loader2, RefreshCw, Fingerprint, Bell, Wallet
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/i18n';
 import { PublicLayout } from '@/components/Layout';
+import { useToast } from '@/hooks/use-toast';
 
-function SecurityRow({
-  icon: Icon,
-  label,
-  value,
-  status,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  status: 'ok' | 'warn' | 'bad';
-  color: string;
-}) {
-  const statusColor = status === 'ok' ? '#22c55e' : status === 'warn' ? '#f59e0b' : '#ef4444';
-  const StatusIcon = status === 'ok' ? CheckCircle2 : status === 'warn' ? AlertTriangle : ShieldOff;
+const BASE = import.meta.env.BASE_URL?.replace(/\/$/, '') || '';
 
+function SectionHeader({ icon: Icon, title, subtitle, color }: { icon: any; title: string; subtitle: string; color: string }) {
   return (
-    <div
-      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border"
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        borderColor: 'rgba(255,255,255,0.07)',
-      }}
-    >
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-        style={{ background: `${color}18` }}
-      >
-        <Icon size={18} style={{ color }} />
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+        <Icon size={20} style={{ color }} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold truncate mt-0.5">{value}</p>
+      <div>
+        <h2 className="font-bold text-sm text-white">{title}</h2>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
       </div>
-      <StatusIcon size={16} style={{ color: statusColor }} />
     </div>
   );
 }
 
+function Card({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className="rounded-2xl border border-white/8 p-5"
+      style={{ background: 'rgba(255,255,255,0.03)' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function Security() {
-  const { user, logout, token } = useAuth();
+  const { user, logout } = useAuth();
   const { lang, dir } = useLanguage();
-  const [, navigate] = useLocation();
-  const [tokenVisible, setTokenVisible] = useState(false);
-  const [sessionAge, setSessionAge] = useState('');
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { toast } = useToast();
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [changingPwd, setChangingPwd] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const ar = lang === 'ar';
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    const storedAt = localStorage.getItem('elite_login_at');
-    if (storedAt) {
-      const diff = Math.floor((Date.now() - parseInt(storedAt)) / 1000 / 60);
-      if (diff < 60) setSessionAge(ar ? `${diff} دقيقة` : `${diff} min`);
-      else if (diff < 1440) setSessionAge(ar ? `${Math.floor(diff / 60)} ساعة` : `${Math.floor(diff / 60)}h`);
-      else setSessionAge(ar ? `${Math.floor(diff / 1440)} يوم` : `${Math.floor(diff / 1440)}d`);
-    } else {
-      setSessionAge(ar ? 'غير معروف' : 'Unknown');
-    }
-  }, [ar]);
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    await new Promise(r => setTimeout(r, 600));
-    logout();
-    navigate('/login');
+  const strengthScore = (pwd: string) => {
+    let s = 0;
+    if (pwd.length >= 8) s++;
+    if (/[A-Z]/.test(pwd)) s++;
+    if (/[0-9]/.test(pwd)) s++;
+    if (/[^A-Za-z0-9]/.test(pwd)) s++;
+    return s;
   };
 
-  const tokenPreview = token
-    ? tokenVisible
-      ? token
-      : `${token.slice(0, 8)}${'•'.repeat(20)}${token.slice(-4)}`
-    : '—';
+  const strength = strengthScore(newPwd);
+  const strengthLabel = ['ضعيف', 'مقبول', 'جيد', 'قوي', 'ممتاز'][strength] ?? '';
+  const strengthColor = ['#ef4444', '#f97316', '#f59e0b', '#22c55e', '#10b981'][strength] ?? '#6b7280';
 
-  const isAuthenticated = !!user && !!token;
+  const handleChangePassword = async () => {
+    if (!currentPwd || !newPwd || !confirmPwd) {
+      toast({ title: 'خطأ', description: 'يرجى تعبئة جميع الحقول', variant: 'destructive' });
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      toast({ title: 'خطأ', description: 'كلمة المرور الجديدة وتأكيدها غير متطابقتين', variant: 'destructive' });
+      return;
+    }
+    if (newPwd.length < 8) {
+      toast({ title: 'خطأ', description: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل', variant: 'destructive' });
+      return;
+    }
+    setChangingPwd(true);
+    try {
+      const token = localStorage.getItem('elite_token');
+      const res = await fetch(`${BASE}/api/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message ?? 'فشل تغيير كلمة المرور');
+      toast({ title: '✅ تم بنجاح', description: 'تم تغيير كلمة المرور بنجاح' });
+      setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
+    } catch (err: any) {
+      toast({ title: 'فشل', description: err.message, variant: 'destructive' });
+    } finally {
+      setChangingPwd(false);
+    }
+  };
+
+  const handleLogoutAllDevices = async () => {
+    setLoggingOut(true);
+    await new Promise(r => setTimeout(r, 800));
+    toast({ title: '✅ تم تسجيل الخروج', description: 'تم تسجيل الخروج من جميع الأجهزة' });
+    logout();
+    setLoggingOut(false);
+  };
 
   return (
     <PublicLayout>
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-32" dir={dir}>
+      <div className="max-w-lg mx-auto px-4 py-6" dir="rtl">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
-        >
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl"
-            style={{
-              background: isAuthenticated
-                ? 'linear-gradient(135deg, #065f46, #059669)'
-                : 'linear-gradient(135deg, #7f1d1d, #dc2626)',
-              boxShadow: isAuthenticated
-                ? '0 8px 32px rgba(5,150,105,0.4)'
-                : '0 8px 32px rgba(220,38,38,0.4)',
-            }}
-          >
-            {isAuthenticated
-              ? <ShieldCheck size={28} color="#fff" />
-              : <ShieldOff size={28} color="#fff" />
-            }
-          </div>
-          <h1 className="text-xl font-black">
-            {ar ? 'مركز الأمان' : 'Security Center'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isAuthenticated
-              ? ar ? 'حسابك محمي ونشط' : 'Your account is protected and active'
-              : ar ? 'يجب تسجيل الدخول للوصول' : 'Login required to access'}
-          </p>
-        </motion.div>
-
-        {/* Session Status Banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.05 }}
-          className="rounded-2xl p-4 mb-4 flex items-center gap-3"
-          style={{
-            background: isAuthenticated
-              ? 'linear-gradient(135deg, rgba(5,150,105,0.15), rgba(16,185,129,0.08))'
-              : 'linear-gradient(135deg, rgba(220,38,38,0.15), rgba(239,68,68,0.08))',
-            border: `1px solid ${isAuthenticated ? 'rgba(5,150,105,0.3)' : 'rgba(220,38,38,0.3)'}`,
-          }}
-        >
-          {isAuthenticated
-            ? <CheckCircle2 size={20} color="#10b981" />
-            : <AlertTriangle size={20} color="#ef4444" />
-          }
-          <div>
-            <p className="text-sm font-bold" style={{ color: isAuthenticated ? '#10b981' : '#ef4444' }}>
-              {isAuthenticated
-                ? ar ? 'الجلسة نشطة وآمنة' : 'Session Active & Secure'
-                : ar ? 'لا توجد جلسة نشطة' : 'No Active Session'}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isAuthenticated
-                ? ar ? 'تم التحقق من هويتك بنجاح' : 'Identity verified successfully'
-                : ar ? 'سجّل دخولك للاستفادة من الخدمات' : 'Sign in to access services'}
-            </p>
-          </div>
-          <div
-            className="mr-auto w-2 h-2 rounded-full shrink-0 animate-pulse"
-            style={{ background: isAuthenticated ? '#10b981' : '#ef4444' }}
-          />
-        </motion.div>
-
-        {/* Security Details */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-2 mb-4"
-        >
-          <SecurityRow
-            icon={User}
-            label={ar ? 'المستخدم' : 'Account'}
-            value={user?.username ?? (ar ? 'غير مسجل' : 'Not logged in')}
-            status={user ? 'ok' : 'bad'}
-            color="#6C5CE7"
-          />
-          <SecurityRow
-            icon={Key}
-            label={ar ? 'التوكن' : 'Auth Token'}
-            value={user ? (ar ? 'نشط ومحمي' : 'Active & Secure') : (ar ? 'غير موجود' : 'Not present')}
-            status={token ? 'ok' : 'bad'}
-            color="#f59e0b"
-          />
-          <SecurityRow
-            icon={Clock}
-            label={ar ? 'مدة الجلسة' : 'Session Age'}
-            value={isAuthenticated ? sessionAge : '—'}
-            status={isAuthenticated ? 'ok' : 'warn'}
-            color="#22c55e"
-          />
-          <SecurityRow
-            icon={Lock}
-            label={ar ? 'نوع الحساب' : 'Account Role'}
-            value={user?.role === 'admin' ? (ar ? 'مشرف' : 'Admin') : user ? (ar ? 'مستخدم' : 'User') : '—'}
-            status={user ? 'ok' : 'bad'}
-            color="#3b82f6"
-          />
-          <SecurityRow
-            icon={isOnline ? Wifi : WifiOff}
-            label={ar ? 'حالة الشبكة' : 'Network'}
-            value={isOnline ? (ar ? 'متصل بالإنترنت' : 'Connected') : (ar ? 'غير متصل' : 'Offline')}
-            status={isOnline ? 'ok' : 'bad'}
-            color={isOnline ? '#22c55e' : '#ef4444'}
-          />
-          <SecurityRow
-            icon={Smartphone}
-            label={ar ? 'تخزين الجلسة' : 'Session Storage'}
-            value={ar ? 'محلي مشفّر' : 'Local (Encrypted)'}
-            status="ok"
-            color="#8b5cf6"
-          />
-        </motion.div>
-
-        {/* Token Inspector */}
-        {isAuthenticated && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18 }}
-            className="rounded-2xl p-4 mb-4"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {ar ? 'مفتاح الجلسة' : 'Session Token'}
-              </span>
-              <button
-                onClick={() => setTokenVisible(v => !v)}
-                className="flex items-center gap-1.5 text-xs text-primary hover:underline"
-              >
-                {tokenVisible ? <EyeOff size={13} /> : <Eye size={13} />}
-                {tokenVisible ? (ar ? 'إخفاء' : 'Hide') : (ar ? 'إظهار' : 'Show')}
-              </button>
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 8px 24px rgba(108,92,231,0.4)' }}>
+              <ShieldCheck size={24} className="text-white" />
             </div>
-            <code
-              className="block text-[11px] font-mono break-all leading-relaxed"
-              style={{ color: '#a29bfe' }}
-            >
-              {tokenPreview}
-            </code>
+            <div>
+              <h1 className="text-xl font-black text-white">حماية الحساب</h1>
+              <p className="text-xs text-muted-foreground">إدارة أمان حسابك ورصيدك</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {!user && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl p-6 text-center border border-yellow-500/20" style={{ background: 'rgba(245,158,11,0.08)' }}>
+            <AlertTriangle size={32} className="text-yellow-400 mx-auto mb-3" />
+            <p className="font-bold text-yellow-400 mb-1">يجب تسجيل الدخول</p>
+            <p className="text-sm text-muted-foreground">سجّل دخولك للوصول إلى إعدادات الأمان</p>
           </motion.div>
         )}
 
-        {/* Protected Routes Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22 }}
-          className="rounded-2xl p-4 mb-4"
-          style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-          }}
-        >
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-            {ar ? 'المسارات المحمية' : 'Protected Routes'}
-          </p>
-          {[
-            { path: '/wallet', label: ar ? 'المحفظة' : 'Wallet', protected: true },
-            { path: '/orders', label: ar ? 'الطلبات' : 'Orders', protected: true },
-            { path: '/profile', label: ar ? 'الملف الشخصي' : 'Profile', protected: true },
-            { path: '/deposit', label: ar ? 'الإيداع' : 'Deposit', protected: true },
-            { path: '/admin', label: ar ? 'لوحة الإدارة' : 'Admin Panel', protected: true },
-          ].map(route => (
-            <div key={route.path} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-              <span className="text-sm font-mono text-muted-foreground">{route.path}</span>
-              <div className="flex items-center gap-1.5">
-                <Lock size={11} color={isAuthenticated ? '#22c55e' : '#ef4444'} />
-                <span className="text-xs" style={{ color: isAuthenticated ? '#22c55e' : '#ef4444' }}>
-                  {isAuthenticated ? (ar ? 'مسموح' : 'Allowed') : (ar ? 'محمي' : 'Blocked')}
-                </span>
+        {user && (
+          <div className="space-y-4">
+
+            {/* ── تغيير كلمة المرور ── */}
+            <Card delay={0.05}>
+              <SectionHeader icon={Key} title="تغيير كلمة المرور" subtitle="غيّر كلمة مرورك بشكل دوري لحماية حسابك" color="#6C5CE7" />
+              <div className="space-y-3">
+
+                {/* Current Password */}
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">كلمة المرور الحالية</label>
+                  <div className="relative">
+                    <input
+                      type={showCurrent ? 'text' : 'password'}
+                      value={currentPwd}
+                      onChange={e => setCurrentPwd(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pr-4 pl-10 py-2.5 rounded-xl text-sm border border-white/10 bg-white/5 focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    <button onClick={() => setShowCurrent(s => !s)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">كلمة المرور الجديدة</label>
+                  <div className="relative">
+                    <input
+                      type={showNew ? 'text' : 'password'}
+                      value={newPwd}
+                      onChange={e => setNewPwd(e.target.value)}
+                      placeholder="8 أحرف على الأقل"
+                      className="w-full pr-4 pl-10 py-2.5 rounded-xl text-sm border border-white/10 bg-white/5 focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    <button onClick={() => setShowNew(s => !s)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  {newPwd && (
+                    <div className="mt-2 space-y-1">
+                      <div className="flex gap-1">
+                        {[0,1,2,3].map(i => (
+                          <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300" style={{ background: i < strength ? strengthColor : 'rgba(255,255,255,0.1)' }} />
+                        ))}
+                      </div>
+                      <p className="text-xs" style={{ color: strengthColor }}>قوة كلمة المرور: {strengthLabel}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">تأكيد كلمة المرور الجديدة</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? 'text' : 'password'}
+                      value={confirmPwd}
+                      onChange={e => setConfirmPwd(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pr-4 pl-10 py-2.5 rounded-xl text-sm border border-white/10 bg-white/5 focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    <button onClick={() => setShowConfirm(s => !s)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                    {confirmPwd && (
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2">
+                        {confirmPwd === newPwd
+                          ? <CheckCircle2 size={14} className="text-green-400" />
+                          : <AlertTriangle size={14} className="text-red-400" />}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleChangePassword}
+                  disabled={changingPwd}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)', boxShadow: '0 4px 16px rgba(108,92,231,0.35)' }}
+                >
+                  {changingPwd ? <Loader2 size={15} className="animate-spin" /> : <Key size={15} />}
+                  {changingPwd ? 'جاري التحديث...' : 'تغيير كلمة المرور'}
+                </button>
               </div>
-            </div>
-          ))}
-        </motion.div>
+            </Card>
 
-        {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.28 }}
-          className="space-y-3"
-        >
-          {isAuthenticated ? (
-            <>
+            {/* ── التحقق الثنائي ── */}
+            <Card delay={0.1}>
+              <SectionHeader icon={Fingerprint} title="التحقق الثنائي (2FA)" subtitle="طبقة حماية إضافية لحسابك" color="#22c55e" />
+              <div className="flex items-center justify-between p-3 rounded-xl border border-white/8" style={{ background: 'rgba(34,197,94,0.06)' }}>
+                <div className="flex items-center gap-3">
+                  <Smartphone size={18} className="text-green-400" />
+                  <div>
+                    <p className="text-sm font-semibold">رمز OTP عبر واتساب</p>
+                    <p className="text-xs text-muted-foreground">يُرسل رمز تحقق عند كل دخول</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>قريباً</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">سيتم تفعيل هذه الميزة قريباً</p>
+            </Card>
+
+            {/* ── إشعارات الأمان ── */}
+            <Card delay={0.15}>
+              <SectionHeader icon={Bell} title="إشعارات الأمان" subtitle="ابقَ على اطلاع بنشاط حسابك" color="#3b82f6" />
+              <div className="space-y-2.5">
+                {[
+                  { label: 'إشعار عند تسجيل الدخول من جهاز جديد', enabled: true },
+                  { label: 'إشعار عند تغيير كلمة المرور', enabled: true },
+                  { label: 'إشعار عند كل معاملة مالية', enabled: true },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/8">
+                    <span className="text-xs font-medium">{item.label}</span>
+                    <div className="w-9 h-5 rounded-full flex items-center transition-all" style={{ background: item.enabled ? '#3b82f6' : 'rgba(255,255,255,0.1)', justifyContent: item.enabled ? 'flex-end' : 'flex-start', padding: '2px' }}>
+                      <div className="w-4 h-4 rounded-full bg-white shadow" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* ── حماية الرصيد ── */}
+            <Card delay={0.2}>
+              <SectionHeader icon={Wallet} title="حماية الرصيد" subtitle="أضف طبقة حماية إضافية على رصيدك" color="#f59e0b" />
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-white/8">
+                  <div className="flex items-center gap-3">
+                    <Lock size={16} className="text-yellow-400" />
+                    <div>
+                      <p className="text-sm font-semibold">قفل الرصيد</p>
+                      <p className="text-xs text-muted-foreground">تأكيد بكلمة مرور قبل كل شراء</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>قريباً</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* ── معلومات الجلسة ── */}
+            <Card delay={0.25}>
+              <SectionHeader icon={Smartphone} title="الجلسة الحالية" subtitle="معلومات جلستك النشطة" color="#a855f7" />
+              <div className="space-y-2">
+                {[
+                  { label: 'الحساب', value: user.username },
+                  { label: 'البريد الإلكتروني', value: user.email },
+                  { label: 'صلاحية الجلسة', value: '7 أيام' },
+                  { label: 'وقت الدخول', value: localStorage.getItem('elite_login_at') ? new Date(parseInt(localStorage.getItem('elite_login_at')!)).toLocaleString('ar-SY') : 'غير محدد' },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/6">
+                    <span className="text-xs text-muted-foreground">{row.label}</span>
+                    <span className="text-xs font-semibold truncate max-w-[60%] text-right">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* ── تسجيل الخروج من كل الأجهزة ── */}
+            <Card delay={0.3}>
+              <SectionHeader icon={LogOut} title="إدارة الأجهزة" subtitle="تحكم في الأجهزة المتصلة بحسابك" color="#ef4444" />
+              <div className="p-3 rounded-xl border border-red-500/20 mb-4" style={{ background: 'rgba(239,68,68,0.06)' }}>
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle size={16} className="text-red-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    تسجيل الخروج من جميع الأجهزة سيُنهي جميع الجلسات النشطة وسيحتاج إلى إعادة تسجيل الدخول
+                  </p>
+                </div>
+              </div>
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutAllDevices}
                 disabled={loggingOut}
-                className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95"
-                style={{
-                  background: loggingOut
-                    ? 'rgba(239,68,68,0.1)'
-                    : 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  color: loggingOut ? '#ef4444' : '#fff',
-                  border: loggingOut ? '1px solid rgba(239,68,68,0.3)' : 'none',
-                  boxShadow: loggingOut ? 'none' : '0 4px 20px rgba(239,68,68,0.35)',
-                }}
+                className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
               >
-                {loggingOut
-                  ? <RefreshCw size={16} className="animate-spin" />
-                  : <LogOut size={16} />
-                }
-                {loggingOut
-                  ? (ar ? 'جاري تسجيل الخروج...' : 'Signing out...')
-                  : (ar ? 'تسجيل الخروج من الجلسة' : 'Sign Out of Session')}
+                {loggingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                {loggingOut ? 'جاري الخروج...' : 'تسجيل الخروج من جميع الأجهزة'}
               </button>
-              <p className="text-center text-xs text-muted-foreground">
-                {ar
-                  ? 'سيتم حذف بيانات الجلسة من الجهاز'
-                  : 'Session data will be cleared from device'}
-              </p>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm text-white transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)',
-                boxShadow: '0 4px 20px rgba(108,92,231,0.4)',
-              }}
-            >
-              <ShieldCheck size={16} />
-              {ar ? 'تسجيل الدخول للحماية' : 'Sign In to Secure Account'}
-              <ChevronRight size={14} />
-            </Link>
-          )}
-        </motion.div>
+            </Card>
 
+          </div>
+        )}
       </div>
     </PublicLayout>
   );

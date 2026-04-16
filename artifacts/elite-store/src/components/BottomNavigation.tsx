@@ -3,6 +3,7 @@ import { Home, Wallet, Package, User, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import { useAuth } from '@/hooks/use-auth';
 
+
 const ADMIN_ROUTES = ['/admin'];
 const HIDE_ROUTES = ['/login', '/register'];
 
@@ -48,7 +49,7 @@ export function BottomNavigation() {
     {
       href: '/security',
       icon: ShieldCheck,
-      label: lang === 'ar' ? 'الأمان' : 'Security',
+      label: lang === 'ar' ? 'الحماية' : 'Security',
       color: '#ef4444',
       match: (l: string) => l === '/security',
     },

@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { db, productsTable } from "@workspace/db";
+import { db, productsTable, settingsTable } from "@workspace/db";
 import { eq, ilike, and, count, sql, or } from "drizzle-orm";
 import { GetProductsQueryParams, GetProductParams } from "@workspace/api-zod";
+import { requireAdmin, AuthRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -152,6 +153,163 @@ router.get("/products/:id", async (req, res): Promise<void> => {
       requiredFields: p.requiredFields ?? [],
     })),
   });
+});
+
+async function getSettingValue(key: string, def: string): Promise<string> {
+  const [row] = await db.select().from(settingsTable).where(eq(settingsTable.key, key));
+  return row?.value ?? def;
+}
+
+router.post("/admin/products/sync", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
+  const { provider } = req.body as { provider?: string };
+
+  const results: { provider: string; imported: number; errors: string[] } = {
+    provider: provider ?? "all",
+    imported: 0,
+    errors: [],
+  };
+
+  const CATEGORY_MAP: Record<string, string> = {
+    games: "mobile_games",
+    mobile_games: "mobile_games",
+    pc_games: "pc_games",
+    gift_cards: "gift_cards",
+    services: "services",
+    apps: "services",
+    social: "services",
+    subscriptions: "services",
+    ai: "services",
+    design: "services",
+    telecom: "general",
+    crypto: "general",
+    numbers: "general",
+    accounts: "general",
+    wholesale: "general",
+    general: "general",
+  };
+
+  async function normalizeCategory(raw: string): Promise<string> {
+    const key = (raw ?? "").toLowerCase().replace(/[^a-z_]/g, "_");
+    return CATEGORY_MAP[key] ?? "general";
+  }
+
+  if (!provider || provider === "ahminix") {
+    try {
+      const apiKey = await getSettingValue("ahminix_api_key", process.env.AHMINIX_API_KEY ?? "");
+      const baseUrl = await getSettingValue("ahminix_base_url", "https://store.ahminix.com/client/api/");
+      if (!apiKey) {
+        results.errors.push("AHMINIX API key not configured");
+      } else {
+        const resp = await fetch(`${baseUrl.replace(/\/$/, "")}/products`, {
+          headers: { "api-key": apiKey.trim(), Accept: "application/json" },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!resp.ok) throw new Error(`Ahminix responded ${resp.status}`);
+        const data = await resp.json();
+        const items: any[] = Array.isArray(data) ? data : (data?.data ?? data?.products ?? []);
+        for (const item of items) {
+          try {
+            const category = await normalizeCategory(item.category ?? item.type ?? "general");
+            const priceUsd = parseFloat(item.price ?? item.cost ?? item.priceUsd ?? "0");
+            const name = item.name ?? item.title ?? item.product_name ?? String(item.id);
+            await db
+              .insert(productsTable)
+              .values({
+                id: `ahminix_${item.id ?? item.product_id}`,
+                name,
+                nameAr: item.name_ar ?? item.nameAr ?? name,
+                description: item.description ?? "",
+                priceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                unitPriceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                profitMargin: "10",
+                category,
+                provider: "ahminix",
+                providerProductId: String(item.id ?? item.product_id ?? ""),
+                status: "active",
+                requiredFields: item.required_fields ?? item.requiredFields ?? ["playerId"],
+                isTopup: category === "mobile_games" || category === "pc_games",
+                isFeatured: false,
+                imageUrl: item.image ?? item.logo ?? null,
+              })
+              .onConflictDoUpdate({
+                target: productsTable.id,
+                set: {
+                  name,
+                  nameAr: item.name_ar ?? item.nameAr ?? name,
+                  priceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                  status: "active",
+                },
+              });
+            results.imported++;
+          } catch (e: any) {
+            results.errors.push(`ahminix item ${item.id}: ${e.message}`);
+          }
+        }
+      }
+    } catch (e: any) {
+      results.errors.push(`Ahminix sync error: ${e.message}`);
+    }
+  }
+
+  if (!provider || provider === "shams4store") {
+    try {
+      const token = await getSettingValue("shams4store_api_token", process.env.SHAMS4STORE_API_TOKEN ?? "");
+      const baseUrl = await getSettingValue("shams4store_base_url", "https://api.shams4store.com/client/api/");
+      if (!token) {
+        results.errors.push("Shams4Store API token not configured");
+      } else {
+        const resp = await fetch(`${baseUrl.replace(/\/$/, "")}/products`, {
+          headers: { "api-token": token.trim(), Accept: "application/json" },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!resp.ok) throw new Error(`Shams4Store responded ${resp.status}`);
+        const data = await resp.json();
+        const items: any[] = Array.isArray(data) ? data : (data?.data ?? data?.products ?? []);
+        for (const item of items) {
+          try {
+            const category = await normalizeCategory(item.category ?? item.type ?? "general");
+            const priceUsd = parseFloat(item.price ?? item.cost ?? item.priceUsd ?? "0");
+            const name = item.name ?? item.title ?? item.product_name ?? String(item.id);
+            await db
+              .insert(productsTable)
+              .values({
+                id: `shams4_${item.id ?? item.product_id}`,
+                name,
+                nameAr: item.name_ar ?? item.nameAr ?? name,
+                description: item.description ?? "",
+                priceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                unitPriceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                profitMargin: "10",
+                category,
+                provider: "shams4store",
+                providerProductId: String(item.id ?? item.product_id ?? ""),
+                status: "active",
+                requiredFields: item.required_fields ?? item.requiredFields ?? ["playerId"],
+                isTopup: category === "mobile_games" || category === "pc_games",
+                isFeatured: false,
+                imageUrl: item.image ?? item.logo ?? null,
+              })
+              .onConflictDoUpdate({
+                target: productsTable.id,
+                set: {
+                  name,
+                  nameAr: item.name_ar ?? item.nameAr ?? name,
+                  priceUsd: String(isFinite(priceUsd) ? priceUsd : 0),
+                  status: "active",
+                },
+              });
+            results.imported++;
+          } catch (e: any) {
+            results.errors.push(`shams4store item ${item.id}: ${e.message}`);
+          }
+        }
+      }
+    } catch (e: any) {
+      results.errors.push(`Shams4Store sync error: ${e.message}`);
+    }
+  }
+
+  res.json({ success: true, ...results });
 });
 
 export default router;

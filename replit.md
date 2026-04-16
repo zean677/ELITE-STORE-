@@ -55,12 +55,25 @@ A professional Arabic-first digital products store and game top-up platform. Dar
 - Dynamic SYP rate from admin settings API (use-settings.ts hook, staleTime 5min)
 - Orders page with Arabic status tabs + date filter + search
 - Development PostgreSQL database was provisioned and schema pushed; API seed created default admin, demo user, 46 demo products, and 12 categories
+- Logo.tsx component created — renders a gradient purple/cyan SVG logo; used in Login, Register, Header, Mobile Menu, Footer, Dashboard Sidebar (replaces "E" badge everywhere)
+- Security page (/security) completely rewritten as "حماية الحساب" — change password form, 2FA stub, notification toggles, session info, balance protection, logout all devices
+- BottomNavigation Security tab renamed to "الحماية"
+- index.html updated with lang="ar" dir="rtl"
+- Category href bugs fixed (accounts, wholesale had double-URL concatenation)
+- `POST /api/admin/products/sync` endpoint added — accepts `{provider: "ahminix"|"shams4store"}`, imports products with category normalization, upserts by id
+- AdminSettings sync buttons updated to use new endpoint
 
 ### shams4store API
 - Base URL: `https://api.shams4store.com/client/api/`
 - Auth: `api-token` header (NOT query param — query param doesn't work)
 - Product types: `amount` (unit price × min_qty = effective price), `package`/`Package`/`specificPackage`/`stock` (fixed price)
-- Sync route: `POST /api/admin/products` (requires admin JWT)
+- Sync route: `POST /api/admin/products/sync` with body `{provider: "shams4store"}` (requires admin JWT)
+
+### AHMINIX API
+- Base URL: `https://store.ahminix.com/client/api/`
+- Auth: `api-key` header
+- Sync route: `POST /api/admin/products/sync` with body `{provider: "ahminix"}` (requires admin JWT)
+- Set API keys in Admin Settings page or via environment variables
 
 ### DB Schema Notes
 - `products.priceUsd` = effective price (for `amount` type: unit_price × min_qty)

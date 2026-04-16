@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n';
 import { useGetNotifications } from '@workspace/api-client-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { CurrencySwitcher } from '@/components/CurrencySwitcher';
+import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, ShoppingBag, Package, Wallet, Bell, User, Settings,
@@ -121,14 +122,8 @@ export function PublicLayout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl" style={{ background: 'rgba(15,23,42,0.92)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-all group-hover:scale-110"
-                style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.4)' }}>
-                <span className="text-white font-black text-sm">E</span>
-              </div>
-              <div>
-                <span className="font-black text-base tracking-tight" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
-              </div>
+            <Link href="/" className="flex items-center gap-2 group hover:opacity-90 transition-opacity">
+              <Logo size={34} withText={true} />
             </Link>
 
             <nav className="hidden md:flex items-center gap-6">
@@ -235,12 +230,7 @@ export function PublicLayout({ children }: LayoutProps) {
             >
               {/* ── Header ── */}
               <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.4)' }}>
-                    <span className="text-white font-black text-sm">E</span>
-                  </div>
-                  <span className="font-black text-base" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
-                </div>
+                <Logo size={32} withText={true} />
                 <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
                   <X size={16} className="text-muted-foreground" />
                 </button>
@@ -375,12 +365,7 @@ export function PublicLayout({ children }: LayoutProps) {
           {/* Top row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6">
             <div className="flex flex-col items-center sm:items-start gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}>
-                  <span className="text-white font-black text-sm">E</span>
-                </div>
-                <span className="font-black text-base" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
-              </div>
+              <Logo size={30} withText={true} />
               <p className="text-xs text-gray-500 text-center sm:text-right max-w-xs" dir="rtl">منصة بيع خدمات رقمية وشحن ألعاب — متوفرون 24/7</p>
             </div>
 
@@ -463,11 +448,8 @@ export function DashboardLayout({ children }: LayoutProps) {
 
       <aside className={`fixed inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} w-64 bg-card border-${dir === 'rtl' ? 'l' : 'r'} border-border z-50 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : dir === 'rtl' ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-5 border-b border-border">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <span className="text-white font-black text-sm">E</span>
-            </div>
-            <span className="font-bold text-lg tracking-tight font-heading">ELITE STORE</span>
+          <Link href="/" className="flex items-center gap-2 group hover:opacity-90 transition-opacity">
+            <Logo size={30} withText={true} />
           </Link>
         </div>
 

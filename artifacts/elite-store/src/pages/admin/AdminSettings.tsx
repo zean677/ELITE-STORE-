@@ -105,14 +105,14 @@ export default function AdminSettings() {
     setSyncingShams(true);
     try {
       const token = localStorage.getItem('elite_token');
-      const res = await fetch(`${BASE}/api/admin/products`, {
+      const res = await fetch(`${BASE}/api/admin/products/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ profit_margin: parseFloat(settings.default_profit_margin) }),
+        body: JSON.stringify({ provider: 'shams4store' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? 'Failed');
-      toast({ title: '✅ مزامنة Shams4Store', description: `تم جلب ${data.synced} منتج بنسبة ربح ${settings.default_profit_margin}%` });
+      toast({ title: '✅ مزامنة Shams4Store', description: `تم استيراد ${data.imported} منتج ${data.errors?.length ? `(${data.errors.length} خطأ)` : ''}` });
     } catch (e: any) {
       toast({ title: 'فشلت المزامنة', description: e?.message ?? 'تعذر الاتصال بـ Shams4Store', variant: 'destructive' });
     } finally {
@@ -124,14 +124,14 @@ export default function AdminSettings() {
     setSyncingAhminix(true);
     try {
       const token = localStorage.getItem('elite_token');
-      const res = await fetch(`${BASE}/api/admin/sync/ahminix`, {
+      const res = await fetch(`${BASE}/api/admin/products/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ profit_margin: parseFloat(settings.default_profit_margin) }),
+        body: JSON.stringify({ provider: 'ahminix' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? 'Failed');
-      toast({ title: '✅ مزامنة AHMINIX', description: `تم جلب ${data.synced} منتج بنسبة ربح ${settings.default_profit_margin}%` });
+      toast({ title: '✅ مزامنة AHMINIX', description: `تم استيراد ${data.imported} منتج ${data.errors?.length ? `(${data.errors.length} خطأ)` : ''}` });
     } catch (e: any) {
       toast({ title: 'فشلت المزامنة', description: e?.message ?? 'تعذر الاتصال بـ AHMINIX', variant: 'destructive' });
     } finally {
