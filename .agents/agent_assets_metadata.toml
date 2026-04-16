@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "izUSV4pIVijAccZ-jfgWj"
+uri = "file://exports/elite-store-complete-project.zip"
+type = "unspecified"
+title = "Elite Store Complete Project ZIP"
