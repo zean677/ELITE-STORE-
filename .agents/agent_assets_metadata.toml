@@ -6,3 +6,9 @@ id = "izUSV4pIVijAccZ-jfgWj"
 uri = "file://exports/elite-store-complete-project.zip"
 type = "unspecified"
 title = "Elite Store Complete Project ZIP"
+
+[[outputs]]
+id = "eip5eQwcRPAX5lAgwFZoQ"
+uri = "file://elite-store-source.tar.gz"
+type = "unspecified"
+title = "Elite Store — Source Code (كامل)"
