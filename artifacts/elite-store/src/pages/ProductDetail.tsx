@@ -57,16 +57,22 @@ export default function ProductDetail() {
     }
     try {
       await createOrder.mutateAsync({
-        productId: id,
-        qty,
-        playerId: playerId || undefined,
-        currency: currency as any,
+        data: {
+          productId: id,
+          qty,
+          playerId: playerId || undefined,
+          currency: currency as any,
+        },
       });
-      toast({ title: 'Order placed!', description: `Your order for ${product?.name} has been placed successfully.` });
+      toast({ title: '✅ تم تقديم الطلب', description: `تم إرسال طلبك لـ ${product?.name} بنجاح` });
       navigate('/orders');
     } catch (err: any) {
-      const msg = err?.data?.message ?? err?.message ?? 'Failed to place order';
-      toast({ title: 'Order failed', description: msg, variant: 'destructive' });
+      const serverMsg = (err?.data as any)?.message ?? err?.message ?? '';
+      const isInsufficientBalance = serverMsg.toLowerCase().includes('insufficient') || serverMsg.toLowerCase().includes('balance');
+      const msg = isInsufficientBalance
+        ? 'رصيدك غير كافٍ. يرجى شحن المحفظة أولاً.'
+        : serverMsg || 'حدث خطأ أثناء تقديم الطلب';
+      toast({ title: '❌ فشل الطلب', description: msg, variant: 'destructive' });
     }
   };
 
