@@ -21,7 +21,7 @@ function FloatingSupport() {
   const { lang } = useLanguage();
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-2">
+    <div className="fixed bottom-20 left-3 sm:bottom-6 sm:left-5 z-50 flex flex-col items-start gap-2">
       <AnimatePresence>
         {open && (
           <>
