@@ -215,11 +215,155 @@ export function PublicLayout({ children }: LayoutProps) {
       </header>
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden border-b border-border bg-card overflow-hidden">
-            <div className="px-4 py-3 space-y-1">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm rounded-lg hover:bg-background">{t('home')}</Link>
-              <Link href="/products" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm rounded-lg hover:bg-background">{t('products')}</Link>
-            </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[90] md:hidden"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ x: dir === 'rtl' ? '100%' : '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: dir === 'rtl' ? '100%' : '-100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className={`absolute top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} bottom-0 w-72 overflow-y-auto flex flex-col`}
+              style={{ background: 'linear-gradient(180deg, #0d1627 0%, #0a1122 100%)', borderLeft: dir === 'rtl' ? 'none' : '1px solid rgba(108,92,231,0.2)', borderRight: dir === 'rtl' ? '1px solid rgba(108,92,231,0.2)' : 'none', boxShadow: dir === 'rtl' ? '-20px 0 60px rgba(0,0,0,0.7)' : '20px 0 60px rgba(0,0,0,0.7)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* ── Header ── */}
+              <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.4)' }}>
+                    <span className="text-white font-black text-sm">E</span>
+                  </div>
+                  <span className="font-black text-base" style={{ background: 'linear-gradient(90deg, #a29bfe, #00CEC9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ELITE STORE</span>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <X size={16} className="text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* ── User / Auth ── */}
+              {user ? (
+                <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'rgba(108,92,231,0.12)', border: '1px solid rgba(108,92,231,0.2)' }}>
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-black text-base">{user.username[0].toUpperCase()}</span>
+                    </div>
+                    <div className="min-w-0 flex-1" dir="rtl">
+                      <p className="font-bold text-sm truncate">{user.username}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Coins size={11} className="text-green-400" />
+                        <span className="text-green-400 text-xs font-bold">{userBalanceSYP} ل.س</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 space-y-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} dir="rtl">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                    style={{ background: 'rgba(108,92,231,0.15)', border: '1px solid rgba(108,92,231,0.3)', color: '#a29bfe' }}>
+                    {t('login')}
+                  </Link>
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)', boxShadow: '0 4px 15px rgba(108,92,231,0.3)' }}>
+                    {t('register')}
+                  </Link>
+                </div>
+              )}
+
+              {/* ── Navigation ── */}
+              <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} dir="rtl">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{lang === 'ar' ? 'التنقل' : 'Navigation'}</p>
+                <div className="space-y-0.5">
+                  {[
+                    { href: '/', label: lang === 'ar' ? 'الرئيسية' : 'Home', icon: '🏠' },
+                    { href: '/products', label: lang === 'ar' ? 'جميع المنتجات' : 'All Products', icon: '🛍️' },
+                    { href: '/support', label: lang === 'ar' ? 'الدعم الفني' : 'Support', icon: '💬' },
+                    { href: '/terms', label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms', icon: '📜' },
+                  ].map(item => (
+                    <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-muted-foreground hover:text-foreground">
+                      <span className="text-base w-6 text-center">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  ))}
+                  {user && <>
+                    <Link href="/orders" onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-muted-foreground hover:text-foreground">
+                      <span className="text-base w-6 text-center">📦</span>{lang === 'ar' ? 'طلباتي' : 'My Orders'}
+                    </Link>
+                    <Link href="/wallet" onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-muted-foreground hover:text-foreground">
+                      <span className="text-base w-6 text-center">💳</span>{lang === 'ar' ? 'المحفظة والإيداع' : 'Wallet'}
+                    </Link>
+                  </>}
+                </div>
+              </div>
+
+              {/* ── Categories ── */}
+              <div className="p-4 flex-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} dir="rtl">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{lang === 'ar' ? 'الأقسام' : 'Categories'}</p>
+                <div className="space-y-2">
+                  {[
+                    { id: 'mobile_games', nameAr: 'ألعاب الهاتف', icon: '🎮', count: 45, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
+                    { id: 'pc_games',     nameAr: 'ألعاب الكمبيوتر', icon: '🖥️', count: 23, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.25)' },
+                    { id: 'services',     nameAr: 'الخدمات الرقمية', icon: '⚡', count: 23, color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)' },
+                    { id: 'general',      nameAr: 'عام ومتنوع',      icon: '🛒', count: 18, color: '#f43f5e', bg: 'rgba(244,63,94,0.1)',  border: 'rgba(244,63,94,0.25)'  },
+                    { id: 'gift_cards',   nameAr: 'بطاقات الهدايا',  icon: '🎁', count: 15, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+                  ].map(cat => (
+                    <Link
+                      key={cat.id}
+                      href={`/products?category=${cat.id}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 p-3 rounded-2xl transition-all hover:brightness-125 active:scale-[0.98]"
+                      style={{ background: cat.bg, border: `1px solid ${cat.border}` }}
+                    >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: `${cat.color}22` }}>
+                        {cat.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-white">{cat.nameAr}</p>
+                        <p className="text-xs mt-0.5" style={{ color: cat.color }}>{cat.count} منتج</p>
+                      </div>
+                      <ChevronRight size={14} className="rotate-180 shrink-0" style={{ color: cat.color }} />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Social + Logout ── */}
+              <div className="p-4 space-y-3" dir="rtl">
+                <div className="flex gap-2">
+                  {[
+                    { href: `https://wa.me/${WHATSAPP_NUMBER}`, label: 'واتساب',  color: '#25d366', icon: '💬' },
+                    { href: 'https://t.me/elitestore_sy',        label: 'تيليغرام', color: '#2aabee', icon: '✈️' },
+                    { href: GROUP_LINK,                           label: 'مجتمع',   color: '#128C7E', icon: '👥' },
+                  ].map((s, i) => (
+                    <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-[10px] font-bold transition-all hover:scale-105 active:scale-95"
+                      style={{ background: `${s.color}15`, border: `1px solid ${s.color}30`, color: s.color }}>
+                      <span className="text-base">{s.icon}</span>
+                      {s.label}
+                    </a>
+                  ))}
+                </div>
+                {user && (
+                  <button onClick={() => { logout(); setMobileMenuOpen(false); }}
+                    className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444' }}>
+                    <LogOut size={14} />
+                    {t('logout')}
+                  </button>
+                )}
+                <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>© {new Date().getFullYear()} Elite Store — جميع الحقوق محفوظة</p>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
