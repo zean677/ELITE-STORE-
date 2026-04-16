@@ -396,7 +396,7 @@ function HeroBanner() {
       ))}
 
       {/* Elite badge */}
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+      <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
         style={{ background: 'rgba(108,92,231,0.4)', border: '1px solid rgba(196,181,253,0.4)' }}>
         <Zap size={10} className="text-yellow-400" />
         <span className="text-[11px] font-black text-white">Elite Store</span>
