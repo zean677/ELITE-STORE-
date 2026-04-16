@@ -6,7 +6,7 @@ import { useGetAdminDashboard, useGetAdminOrders } from '@workspace/api-client-r
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Users, Package, CreditCard, TrendingUp, ChevronRight, RefreshCw } from 'lucide-react';
+import { Users, Package, CreditCard, TrendingUp, ChevronRight, RefreshCw, Layers } from 'lucide-react';
 
 const BASE = import.meta.env.BASE_URL?.replace(/\/$/, '') || '';
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -79,9 +79,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats */}
-          <motion.div initial="initial" animate="animate" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div initial="initial" animate="animate" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             <StatCard icon={Users} label="إجمالي المستخدمين" value={String(stats?.totalUsers ?? 0)} color="primary" />
             <StatCard icon={Package} label="إجمالي الطلبات" value={String(stats?.totalOrders ?? 0)} sub={`${stats?.pendingOrders ?? 0} قيد المعالجة`} color="secondary" />
+            <StatCard icon={Layers} label="المنتجات النشطة" value={String((stats as any)?.totalProducts ?? 0)} color="accent" />
             <StatCard icon={CreditCard} label="مدفوعات معلّقة" value={String(stats?.pendingPayments ?? 0)} color="accent" />
             <StatCard icon={TrendingUp} label="إجمالي الإيرادات" value={`$${parseFloat(stats?.totalRevenue?.toString() ?? '0').toFixed(2)}`} sub={`اليوم: $${parseFloat(stats?.revenueToday?.toString() ?? '0').toFixed(2)}`} color="success" />
           </motion.div>

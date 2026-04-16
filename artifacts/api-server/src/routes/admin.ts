@@ -21,6 +21,7 @@ router.get("/admin/dashboard", requireAdmin, async (req: AuthRequest, res): Prom
 
   const [totalOrdersResult] = await db.select({ count: count() }).from(ordersTable);
   const [totalUsersResult] = await db.select({ count: count() }).from(usersTable).where(eq(usersTable.role, "user"));
+  const [totalProductsResult] = await db.select({ count: count() }).from(productsTable).where(eq(productsTable.status, "active"));
   const [pendingPaymentsResult] = await db.select({ count: count() }).from(paymentsTable).where(eq(paymentsTable.status, "pending"));
   const [completedOrdersResult] = await db.select({ count: count() }).from(ordersTable).where(eq(ordersTable.status, "completed"));
   const [failedOrdersResult] = await db.select({ count: count() }).from(ordersTable).where(eq(ordersTable.status, "failed"));
@@ -60,6 +61,7 @@ router.get("/admin/dashboard", requireAdmin, async (req: AuthRequest, res): Prom
     totalRevenue: parseFloat(totalRevenueResult?.total ?? "0"),
     totalOrders: totalOrdersResult?.count ?? 0,
     totalUsers: totalUsersResult?.count ?? 0,
+    totalProducts: totalProductsResult?.count ?? 0,
     pendingPayments: pendingPaymentsResult?.count ?? 0,
     completedOrders: completedOrdersResult?.count ?? 0,
     failedOrders: failedOrdersResult?.count ?? 0,

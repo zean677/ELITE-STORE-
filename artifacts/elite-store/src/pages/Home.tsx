@@ -87,7 +87,7 @@ const CATEGORIES_FALLBACK = [
     id: 'telecom',
     nameAr: 'الرصيد والاتصالات',
     nameEn: 'Telecom',
-    href: '/products?category=services/products?category=general&q=telecomq=telecom',
+    href: '/products?category=general&q=telecom',
     color: '#ef4444',
     bg: 'linear-gradient(145deg, #200010, #400020)',
     icons: [
@@ -115,7 +115,7 @@ const CATEGORIES_FALLBACK = [
     id: 'crypto',
     nameAr: 'العملات الرقمية',
     nameEn: 'Crypto',
-    href: '/products?category=services/products?category=general&q=cryptoq=crypto',
+    href: '/products?category=general&q=crypto',
     color: '#f59e0b',
     bg: 'linear-gradient(145deg, #201500, #403000)',
     icons: [
@@ -394,91 +394,292 @@ function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
   );
 }
 
-// ─── Hero Banner ──────────────────────────────────────────────
-function HeroBanner() {
-  return (
-    <div
-      className="relative w-full rounded-2xl overflow-hidden mb-5"
-      style={{
-        background: 'linear-gradient(135deg, #0d0025 0%, #1a0050 35%, #0f172a 100%)',
-        border: '1px solid rgba(108,92,231,0.3)',
-        boxShadow: '0 0 60px rgba(108,92,231,0.15)',
-        minHeight: 160,
-      }}
-    >
-      {/* Glow circles */}
-      <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full opacity-25"
-        style={{ background: 'radial-gradient(circle, #6C5CE7, transparent)' }} />
-      <div className="absolute -left-8 -bottom-8 w-40 h-40 rounded-full opacity-20"
-        style={{ background: 'radial-gradient(circle, #00CEC9, transparent)' }} />
+// ─── Hero Banner Slider ───────────────────────────────────────
+const HERO_SLIDES = [
+  {
+    id: 0,
+    bg: 'linear-gradient(135deg, #0d0025 0%, #1e0060 40%, #0a0a2e 100%)',
+    glow1: '#6C5CE7',
+    glow2: '#a29bfe',
+    accentColor: '#6C5CE7',
+    badgeText: '🎮 متجر Elite Store',
+    title: 'أفضل أسعار\nالألعاب الرقمية',
+    subtitle: 'شحن فوري · ضمان كامل · خدمة 24/7',
+    ctaText: 'تصفح المنتجات',
+    ctaHref: '/products',
+    ctaSecondary: 'اشحن الآن',
+    ctaSecondaryHref: '/products?category=mobile_games',
+    emoji: '🎮',
+    particles: ['#6C5CE7', '#a29bfe', '#00CEC9', '#6C5CE7', '#a29bfe', '#fff'],
+    badge2: '🏆 الأفضل سعراً',
+    icon: '🕹️',
+    barColors: ['#6C5CE7', '#a29bfe', '#7c3aed', '#8b5cf6', '#6C5CE7'],
+  },
+  {
+    id: 1,
+    bg: 'linear-gradient(135deg, #001a00 0%, #003d00 40%, #001200 100%)',
+    glow1: '#22c55e',
+    glow2: '#86efac',
+    accentColor: '#22c55e',
+    badgeText: '⚡ تسليم فوري',
+    title: 'تسليم آني\nبعد الدفع مباشرة',
+    subtitle: 'أكثر من 100 منتج رقمي متاح الآن',
+    ctaText: 'بطاقات الهدايا',
+    ctaHref: '/products?category=gift_cards',
+    ctaSecondary: 'الاشتراكات',
+    ctaSecondaryHref: '/products?category=services',
+    emoji: '⚡',
+    particles: ['#22c55e', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#fff'],
+    badge2: '✅ ضمان استرداد',
+    icon: '🚀',
+    barColors: ['#22c55e', '#16a34a', '#4ade80', '#86efac', '#22c55e'],
+  },
+  {
+    id: 2,
+    bg: 'linear-gradient(135deg, #001020 0%, #002060 40%, #000d1a 100%)',
+    glow1: '#3b82f6',
+    glow2: '#93c5fd',
+    accentColor: '#3b82f6',
+    badgeText: '🔒 دفع آمن 100%',
+    title: 'دفع مضمون\nبطرق متعددة',
+    subtitle: 'Syriatel Cash · Sham Cash · وأكثر',
+    ctaText: 'اشحن رصيدك',
+    ctaHref: '/deposit',
+    ctaSecondary: 'إنشاء حساب',
+    ctaSecondaryHref: '/register',
+    emoji: '🔒',
+    particles: ['#3b82f6', '#93c5fd', '#60a5fa', '#3b82f6', '#1d4ed8', '#fff'],
+    badge2: '💳 دفع مرن',
+    icon: '🛡️',
+    barColors: ['#3b82f6', '#1d4ed8', '#60a5fa', '#93c5fd', '#3b82f6'],
+  },
+];
 
-      {/* Animated particles */}
-      {[...Array(8)].map((_, i) => (
+function HeroBanner() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const goTo = (idx: number) => {
+    if (isAnimating || idx === activeSlide) return;
+    setIsAnimating(true);
+    setActiveSlide(idx);
+    setTimeout(() => setIsAnimating(false), 600);
+  };
+
+  const next = () => goTo((activeSlide + 1) % HERO_SLIDES.length);
+
+  useEffect(() => {
+    timerRef.current = setInterval(next, 4500);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [activeSlide]);
+
+  const slide = HERO_SLIDES[activeSlide];
+
+  return (
+    <div className="relative w-full rounded-3xl overflow-hidden mb-5" style={{ minHeight: 200 }}>
+      {/* Slide background */}
+      <AnimatePresence mode="wait">
         <motion.div
-          key={i}
-          className="absolute w-1 h-1 rounded-full"
-          style={{ background: i % 2 === 0 ? '#6C5CE7' : '#00CEC9', top: `${15 + i * 10}%`, left: `${5 + i * 10}%` }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.5, 1] }}
-          transition={{ duration: 2 + i * 0.3, repeat: Infinity, delay: i * 0.2 }}
+          key={slide.id}
+          className="absolute inset-0"
+          style={{ background: slide.bg }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        />
+      </AnimatePresence>
+
+      {/* Border glow */}
+      <div className="absolute inset-0 rounded-3xl pointer-events-none"
+        style={{ border: `1px solid ${slide.accentColor}40`, boxShadow: `0 0 80px ${slide.accentColor}18, inset 0 0 40px ${slide.accentColor}06` }} />
+
+      {/* Glow circles */}
+      <motion.div
+        key={`g1-${slide.id}`}
+        className="absolute -right-16 -top-16 w-72 h-72 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${slide.glow1}50, transparent 70%)` }}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      <motion.div
+        key={`g2-${slide.id}`}
+        className="absolute -left-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${slide.glow2}40, transparent 70%)` }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+      />
+
+      {/* Floating particles */}
+      {slide.particles.map((color, i) => (
+        <motion.div
+          key={`p-${slide.id}-${i}`}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            background: color,
+            width: i % 3 === 0 ? 6 : i % 3 === 1 ? 4 : 3,
+            height: i % 3 === 0 ? 6 : i % 3 === 1 ? 4 : 3,
+            top: `${10 + i * 14}%`,
+            left: `${8 + i * 12}%`,
+            filter: 'blur(0.5px)',
+          }}
+          animate={{
+            opacity: [0.2, 0.9, 0.2],
+            scale: [1, 1.8, 1],
+            y: [0, -8, 0],
+          }}
+          transition={{ duration: 2 + i * 0.4, repeat: Infinity, delay: i * 0.18 }}
         />
       ))}
 
-      {/* Elite badge */}
-      <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-        style={{ background: 'rgba(108,92,231,0.4)', border: '1px solid rgba(196,181,253,0.4)' }}>
-        <Zap size={10} className="text-yellow-400" />
-        <span className="text-[11px] font-black text-white">Elite Store</span>
+      {/* Scanline overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 3px)', backgroundSize: '100% 4px' }} />
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col justify-between h-full" style={{ minHeight: 200, padding: '18px 16px 16px' }} dir="rtl">
+        {/* Top badges row */}
+        <div className="flex items-center justify-between mb-3">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`badge-${slide.id}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black text-white"
+              style={{ background: `${slide.accentColor}30`, border: `1px solid ${slide.accentColor}50`, backdropFilter: 'blur(8px)' }}
+            >
+              {slide.badgeText}
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white/80"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            {slide.badge2}
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="mb-3">
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={`title-${slide.id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.45, delay: 0.05 }}
+              className="font-black text-white text-2xl leading-tight mb-1.5"
+              style={{ textShadow: `0 0 40px ${slide.accentColor}60`, whiteSpace: 'pre-line' }}
+            >
+              {slide.title}
+            </motion.h1>
+          </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={`sub-${slide.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="text-xs font-medium"
+              style={{ color: `${slide.accentColor}cc` }}
+            >
+              {slide.subtitle}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        {/* CTA buttons + dots */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AnimatePresence mode="wait">
+              <motion.a
+                key={`cta-${slide.id}`}
+                href={`${BASE}${slide.ctaHref}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.35, delay: 0.15 }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-white transition-all hover:scale-105 active:scale-95"
+                style={{ background: `linear-gradient(135deg, ${slide.accentColor}, ${slide.glow2})`, boxShadow: `0 4px 20px ${slide.accentColor}50` }}
+              >
+                <Zap size={11} />
+                {slide.ctaText}
+              </motion.a>
+            </AnimatePresence>
+            <motion.a
+              href={`${BASE}${slide.ctaSecondaryHref}`}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-white/80 transition-all hover:text-white active:scale-95"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+            >
+              {slide.ctaSecondary}
+            </motion.a>
+          </div>
+
+          {/* Dots indicator */}
+          <div className="flex items-center gap-1.5">
+            {HERO_SLIDES.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className="transition-all duration-300 rounded-full"
+                style={{
+                  width: i === activeSlide ? 22 : 7,
+                  height: 7,
+                  background: i === activeSlide ? slide.accentColor : 'rgba(255,255,255,0.25)',
+                  boxShadow: i === activeSlide ? `0 0 10px ${slide.accentColor}80` : 'none',
+                }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-center pr-5 pl-2" dir="rtl">
-        <motion.p
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-white font-black text-2xl leading-tight mb-2"
-          style={{ textShadow: '0 0 30px rgba(108,92,231,0.5)' }}
-        >
-          متوفرون معكم جميع<br />أيام الأسبوع 🕐
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="flex items-center gap-3 mb-2"
-        >
-          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
-            <Shield size={10} className="text-green-400" /> ضمان
-          </span>
-          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
-            <Zap size={10} className="text-yellow-400" /> خدمة سريعة
-          </span>
-          <span className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-1 rounded-full border border-white/10">
-            <Clock size={10} className="text-blue-400" /> سعر ممتاز
-          </span>
-        </motion.div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          className="text-white/40 text-xs leading-relaxed max-w-[220px]"
-        >
-          نقدم لكم أفضل الأسعار والخدمات داخل وخارج سوريا
-        </motion.p>
-      </div>
-
-      {/* Right visual (vertical bars effect) */}
-      <div className="absolute right-0 bottom-0 top-0 w-24 flex items-end justify-end pr-3 pb-3 gap-1">
-        {[60, 80, 55, 90, 70].map((h, i) => (
+      {/* Right side icon + bars */}
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2 pointer-events-none">
+        <AnimatePresence mode="wait">
           <motion.div
-            key={i}
-            className="w-3 rounded-t-md"
-            style={{ height: `${h}%`, background: `linear-gradient(to top, #6C5CE7${90 - i * 10}, #a29bfe30)` }}
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            transition={{ delay: 0.1 * i, type: 'spring', stiffness: 200 }}
-          />
-        ))}
+            key={`icon-${slide.id}`}
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+            style={{ background: `${slide.accentColor}22`, border: `1.5px solid ${slide.accentColor}40`, backdropFilter: 'blur(10px)' }}
+          >
+            {slide.icon}
+          </motion.div>
+        </AnimatePresence>
+        <div className="flex items-end gap-0.5 h-10">
+          {slide.barColors.map((color, i) => (
+            <motion.div
+              key={`bar-${slide.id}-${i}`}
+              className="w-2.5 rounded-t-sm"
+              style={{ background: color }}
+              initial={{ scaleY: 0, originY: 1 }}
+              animate={{ scaleY: 1 }}
+              transition={{ delay: i * 0.08, type: 'spring', stiffness: 250 }}
+              custom={i}
+            >
+              <motion.div
+                className="w-full h-full rounded-t-sm"
+                style={{ background: `linear-gradient(to top, ${color}ff, ${color}44)`, height: `${35 + i * 8}%` }}
+                animate={{ height: [`${35 + i * 8}%`, `${50 + i * 8}%`, `${35 + i * 8}%`] }}
+                transition={{ duration: 1.5 + i * 0.2, repeat: Infinity, delay: i * 0.1 }}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Elite Store label */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+          style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
+          <Zap size={8} style={{ color: slide.accentColor }} />
+          <span className="text-[9px] font-black text-white/70">Elite Store</span>
+        </div>
       </div>
     </div>
   );
@@ -576,48 +777,20 @@ function NoticePanel() {
 export default function Home() {
   const { lang } = useLanguage();
 
-  const { data: apiCats } = useQuery({
-    queryKey: ['public-product-categories'],
+  const { data: dbCats } = useQuery({
+    queryKey: ['public-db-categories'],
     queryFn: async () => {
-      const res = await fetch(`${BASE}/api/products/categories`);
+      const res = await fetch(`${BASE}/api/categories`);
       if (!res.ok) return null;
       const data = await res.json();
-      const colors: Record<string, string> = {
-        mobile_games: '#7c3aed',
-        pc_games: '#06b6d4',
-        gift_cards: '#f59e0b',
-        services: '#22c55e',
-        general: '#6C5CE7',
-      };
-      const names: Record<string, { ar: string; en: string }> = {
-        mobile_games: { ar: 'ألعاب الموبايل', en: 'Mobile Games' },
-        pc_games: { ar: 'ألعاب الكمبيوتر', en: 'PC Games' },
-        gift_cards: { ar: 'البطاقات', en: 'Gift Cards' },
-        services: { ar: 'الخدمات الرقمية', en: 'Digital Services' },
-        general: { ar: 'منتجات عامة', en: 'General' },
-      };
-      return (data.categories ?? []).map((cat: any) => ({
-        id: cat.slug,
-        nameAr: names[cat.slug]?.ar ?? cat.label,
-        nameEn: names[cat.slug]?.en ?? cat.label,
-        href: `/products?category=${cat.slug}`,
-        color: colors[cat.slug] ?? '#6C5CE7',
-        bgGradient: `linear-gradient(145deg, ${colors[cat.slug] ?? '#6C5CE7'}22, #0F172A)`,
-        icon1: '',
-        icon2: '',
-        icon3: '',
-        icon4: '',
-        iconLabel1: `${cat.count}`,
-        iconLabel2: 'API',
-        iconLabel3: '',
-        iconLabel4: '',
-      }));
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return data as any[];
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const displayCats: CatDisplay[] = apiCats && apiCats.length > 0
-    ? apiCats.map(apiToCat)
+  const displayCats: CatDisplay[] = dbCats && dbCats.length > 0
+    ? dbCats.map(apiToCat)
     : CATEGORIES_FALLBACK as unknown as CatDisplay[];
 
   return (
