@@ -142,12 +142,14 @@ export default function Deposit() {
     }
     try {
       await createPayment.mutateAsync({
-        amount: parseFloat(amount),
-        currency,
-        method,
-        screenshotUrl: screenshotFile,
-        transactionRef: transactionRef.trim(),
-      } as any);
+        data: {
+          amount: parseFloat(amount),
+          currency,
+          method,
+          screenshotUrl: screenshotFile,
+          transactionRef: transactionRef.trim(),
+        } as any,
+      });
       setSubmitted(true);
     } catch (err: any) {
       const msg = err?.data?.message ?? (lang === 'ar' ? 'فشل إرسال الطلب' : 'Failed to submit');

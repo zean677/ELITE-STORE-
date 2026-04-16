@@ -125,11 +125,27 @@ router.get("/admin/payments", requireAdmin, async (req: AuthRequest, res): Promi
   const qp = GetAdminPaymentsQueryParams.safeParse(req.query);
   const status = qp.success ? qp.data.status : undefined;
 
-  const payments = status
-    ? await db.select().from(paymentsTable).where(eq(paymentsTable.status, status)).orderBy(desc(paymentsTable.createdAt))
-    : await db.select().from(paymentsTable).orderBy(desc(paymentsTable.createdAt));
+  const rows = await db
+    .select({
+      id: paymentsTable.id,
+      userId: paymentsTable.userId,
+      amount: paymentsTable.amount,
+      currency: paymentsTable.currency,
+      method: paymentsTable.method,
+      status: paymentsTable.status,
+      screenshotUrl: paymentsTable.screenshotUrl,
+      transactionRef: paymentsTable.transactionRef,
+      adminNote: paymentsTable.adminNote,
+      createdAt: paymentsTable.createdAt,
+      userEmail: usersTable.email,
+      username: usersTable.username,
+    })
+    .from(paymentsTable)
+    .leftJoin(usersTable, eq(paymentsTable.userId, usersTable.id))
+    .where(status ? eq(paymentsTable.status, status) : undefined)
+    .orderBy(desc(paymentsTable.createdAt));
 
-  res.json(payments.map(p => ({ ...p, amount: parseFloat(p.amount ?? "0") })));
+  res.json(rows.map(p => ({ ...p, amount: parseFloat(p.amount ?? "0") })));
 });
 
 router.post("/admin/payments/:id/verify", requireAdmin, async (req: AuthRequest, res): Promise<void> => {
