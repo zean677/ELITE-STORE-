@@ -8,15 +8,15 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const CURRENCY_RATES: Record<string, number> = {
-  USD: 1,
-  SYP: 13000,
-  EUR: 0.92,
-};
-
 async function getSettingVal(key: string, def: string): Promise<string> {
   const [row] = await db.select().from(settingsTable).where(eq(settingsTable.key, key));
   return row?.value ?? def;
+}
+
+async function getCurrencyRates(): Promise<Record<string, number>> {
+  const sypRate = parseFloat(await getSettingVal("syp_rate", "13000"));
+  const eurRate = parseFloat(await getSettingVal("eur_rate", "0.92"));
+  return { USD: 1, SYP: Number.isFinite(sypRate) ? sypRate : 13000, EUR: Number.isFinite(eurRate) ? eurRate : 0.92 };
 }
 
 async function dispatchToProvider(order: any, product: any): Promise<{ success: boolean; providerOrderId?: string; error?: string }> {
@@ -36,16 +36,23 @@ async function dispatchToProvider(order: any, product: any): Promise<{ success: 
         qty: order.qty,
       };
 
-      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
-        method: "POST",
-        headers: { "api-token": token.trim(), "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000),
-      });
+      let response: Response | null = null;
+      let lastText = "";
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
+          method: "POST",
+          headers: { "api-token": token.trim(), "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (response.ok) break;
+        lastText = await response.text().catch(() => "");
+        if (response.status >= 400 && response.status < 500) break;
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        return { success: false, error: `Provider returned ${response.status}: ${text.slice(0, 200)}` };
+      if (!response?.ok) {
+        return { success: false, error: `Provider returned ${response?.status ?? "unknown"}: ${lastText.slice(0, 200)}` };
       }
 
       const data = await response.json();
@@ -65,16 +72,23 @@ async function dispatchToProvider(order: any, product: any): Promise<{ success: 
         order_uuid: order.id,
       };
 
-      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
-        method: "POST",
-        headers: { "api-key": apiKey.trim(), "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000),
-      });
+      let response: Response | null = null;
+      let lastText = "";
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        response = await fetch(`${baseUrl.replace(/\/$/, "")}/newOrder/${providerProductId}`, {
+          method: "POST",
+          headers: { "api-key": apiKey.trim(), "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (response.ok) break;
+        lastText = await response.text().catch(() => "");
+        if (response.status >= 400 && response.status < 500) break;
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        return { success: false, error: `Provider returned ${response.status}: ${text.slice(0, 200)}` };
+      if (!response?.ok) {
+        return { success: false, error: `Provider returned ${response?.status ?? "unknown"}: ${lastText.slice(0, 200)}` };
       }
 
       const data = await response.json();
@@ -140,23 +154,42 @@ router.post("/orders", requireAuth, async (req: AuthRequest, res): Promise<void>
     return;
   }
 
-  const rate = CURRENCY_RATES[currency] ?? 1;
+  const requiredFields = product.requiredFields ?? [];
+  if ((requiredFields.includes("playerId") || requiredFields.includes("email")) && !playerId?.trim()) {
+    res.status(400).json({ error: "Missing required field", message: "Player ID or account identifier is required for this product" });
+    return;
+  }
+
+  const minQty = product.qtyMin ? parseFloat(product.qtyMin) : 1;
+  const maxQty = product.qtyMax ? parseFloat(product.qtyMax) : undefined;
+  if (qty < minQty || (maxQty !== undefined && qty > maxQty)) {
+    res.status(400).json({ error: "Invalid quantity", message: `Quantity must be between ${minQty}${maxQty ? ` and ${maxQty}` : ""}` });
+    return;
+  }
+
+  const rates = await getCurrencyRates();
+  const rate = rates[currency] ?? 1;
   const priceUsd = parseFloat(product.priceUsd ?? "0");
   const totalPrice = priceUsd * qty * rate;
-  const userBalance = parseFloat(user.balance ?? "0") * rate;
+  const userBalanceUsd = parseFloat(user.balance ?? "0");
+  const deductUsd = priceUsd * qty;
 
-  if (userBalance < totalPrice) {
+  if (userBalanceUsd < deductUsd) {
     res.status(400).json({ error: "Insufficient balance", message: "Your wallet balance is insufficient for this order" });
     return;
   }
 
   const orderId = uuidv4();
-  const deductUsd = priceUsd * qty;
-
-  await db
+  const deducted = await db
     .update(usersTable)
     .set({ balance: sql`${usersTable.balance} - ${deductUsd.toString()}` })
-    .where(eq(usersTable.id, req.user!.id));
+    .where(and(eq(usersTable.id, req.user!.id), sql`${usersTable.balance} >= ${deductUsd.toString()}`))
+    .returning();
+
+  if (deducted.length === 0) {
+    res.status(409).json({ error: "Balance locked", message: "Your balance changed before the order could be created. Please retry." });
+    return;
+  }
 
   await db.insert(walletTransactionsTable).values({
     userId: req.user!.id,
@@ -205,6 +238,21 @@ router.post("/orders", requireAuth, async (req: AuthRequest, res): Promise<void>
       });
     } else {
       await db.update(ordersTable).set({ status: "failed", updatedAt: new Date() }).where(eq(ordersTable.id, orderId));
+      await db.update(usersTable).set({ balance: sql`${usersTable.balance} + ${deductUsd.toString()}` }).where(eq(usersTable.id, req.user!.id));
+      await db.insert(walletTransactionsTable).values({
+        userId: req.user!.id,
+        type: "refund",
+        amount: deductUsd.toString(),
+        currency: "USD",
+        description: `Refund for failed order: ${product.name} x${qty}`,
+      });
+      await db.insert(notificationsTable).values({
+        userId: req.user!.id,
+        type: "order_failed",
+        title: "فشل الطلب وتم إرجاع الرصيد",
+        message: `فشل تنفيذ طلبك لـ ${product.name}. تم إرجاع المبلغ إلى محفظتك تلقائياً.`,
+        isRead: false,
+      });
       logger.warn({ orderId, error: result.error }, "Provider dispatch failed, order marked failed");
     }
   }).catch((err) => {

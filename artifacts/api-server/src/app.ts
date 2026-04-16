@@ -6,6 +6,24 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+const requestBuckets = new Map<string, { count: number; resetAt: number }>();
+
+app.use((req, res, next) => {
+  const now = Date.now();
+  const key = `${req.ip}:${req.path}`;
+  const current = requestBuckets.get(key);
+  const bucket = current && current.resetAt > now ? current : { count: 0, resetAt: now + 60_000 };
+  bucket.count += 1;
+  requestBuckets.set(key, bucket);
+
+  if (bucket.count > 180) {
+    res.status(429).json({ error: "Too many requests", message: "Please slow down and try again shortly" });
+    return;
+  }
+
+  next();
+});
+
 app.use(
   pinoHttp({
     logger,

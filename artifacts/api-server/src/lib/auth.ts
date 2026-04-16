@@ -5,6 +5,10 @@ import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "elite_store_secret_key_change_in_prod";
 
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET must be configured in production");
+}
+
 export function signToken(userId: number, role: string): string {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: "7d" });
 }

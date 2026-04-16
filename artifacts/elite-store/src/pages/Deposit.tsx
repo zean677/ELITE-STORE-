@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useCreatePayment } from '@workspace/api-client-react';
+import { useCreatePayment, useGetMyPayments } from '@workspace/api-client-react';
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLanguage } from '@/i18n';
-import { Loader2, Upload, CheckCircle, X, Image as ImageIcon, Hash } from 'lucide-react';
+import { Loader2, Upload, CheckCircle, X, Image as ImageIcon, Hash, Clock, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type Currency = 'USD' | 'SYP' | 'EUR';
@@ -87,6 +87,7 @@ export default function Deposit() {
   const { lang } = useLanguage();
   const { toast } = useToast();
   const createPayment = useCreatePayment();
+  const { data: payments } = useGetMyPayments();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [method, setMethod] = useState('syriatel_cash_auto');
@@ -429,6 +430,42 @@ export default function Deposit() {
               </motion.div>
             )}
           </form>
+
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <h2 className="font-heading font-bold">{lang === 'ar' ? 'حالة طلبات الإيداع' : 'Deposit Status'}</h2>
+              <p className="text-xs text-muted-foreground mt-1">{lang === 'ar' ? 'تابع طلباتك pending / approved / rejected' : 'Track pending, approved, and rejected deposits'}</p>
+            </div>
+            {!payments || payments.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                {lang === 'ar' ? 'لا يوجد طلبات إيداع بعد.' : 'No deposit requests yet.'}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {payments.slice(0, 5).map((payment: any) => {
+                  const icon = payment.status === 'approved' ? <CheckCircle size={15} className="text-success" /> : payment.status === 'rejected' ? <XCircle size={15} className="text-destructive" /> : <Clock size={15} className="text-warning" />;
+                  return (
+                    <div key={payment.id} className="p-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center">{icon}</div>
+                        <div>
+                          <p className="text-sm font-bold">{payment.currency} {Number(payment.amount).toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">{payment.method} · #{payment.id}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full border ${
+                        payment.status === 'approved' ? 'text-success border-success/30 bg-success/10' :
+                        payment.status === 'rejected' ? 'text-destructive border-destructive/30 bg-destructive/10' :
+                        'text-warning border-warning/30 bg-warning/10'
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </DashboardLayout>
     </ProtectedRoute>

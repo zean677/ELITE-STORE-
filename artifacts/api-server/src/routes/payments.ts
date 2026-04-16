@@ -39,6 +39,15 @@ router.post("/payment/create", requireAuth, async (req: AuthRequest, res): Promi
     })
     .returning();
 
+  const admins = await db.select().from(usersTable).where(eq(usersTable.role, "admin"));
+  await Promise.all(admins.map(admin => db.insert(notificationsTable).values({
+    userId: admin.id,
+    type: "payment_pending",
+    title: "طلب إيداع جديد",
+    message: `طلب إيداع جديد بقيمة ${currency} ${amount} عبر ${method}`,
+    isRead: false,
+  })));
+
   res.status(201).json({ ...payment, amount: parseFloat(payment.amount ?? "0") });
 });
 

@@ -161,10 +161,21 @@ router.post("/admin/payments/:id/verify", requireAdmin, async (req: AuthRequest,
   const { action, adminNote } = parsed.data;
   const newStatus = action === "approve" ? "approved" : "rejected";
 
+  const [existingPayment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, id));
+  if (!existingPayment) {
+    res.status(404).json({ error: "Payment not found" });
+    return;
+  }
+
+  if (existingPayment.status !== "pending") {
+    res.status(409).json({ error: "Payment already processed", message: "This payment request was already verified" });
+    return;
+  }
+
   const [payment] = await db
     .update(paymentsTable)
     .set({ status: newStatus, adminNote: adminNote ?? null })
-    .where(eq(paymentsTable.id, id))
+    .where(and(eq(paymentsTable.id, id), eq(paymentsTable.status, "pending")))
     .returning();
 
   if (!payment) {

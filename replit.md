@@ -44,6 +44,12 @@ A professional Arabic-first digital products store and game top-up platform. Dar
 - Animated announcement ticker at top of every page (gradient purple-cyan)
 - Stats bar on home page (24/7, 100%, 500+, 10K+)
 - Products synced from shams4store API (`SHAMS4STORE_API_TOKEN` env var, shared environment)
+- Product API now supports broader provider/API search, provider/category filter metadata, related products, and dynamic status/price data from synced provider rows
+- Orders now validate required fields and quantity limits, use dynamic currency settings, lock wallet balance during purchase, retry provider dispatch, and automatically refund failed provider orders
+- Payments now notify admins on new deposit requests and prevent double approval crediting
+- Product detail page has professional gallery/loading/error/requirements/related-products UX plus order success/failed tracking pages
+- Profile page supports editing username/email and changing password
+- SEO basics added: dynamic product meta tags, `robots.txt`, and `sitemap.xml`
 - Full admin panel at `/admin` (login: ZEAN.23 / ZEAN333ZEAN#)
 - Wallet system: Syriatel Cash (14816688) + ShamCash (wallet: zean677, ID: 5649dd63431812890980008b5b1c3d53)
 - Dynamic SYP rate from admin settings API (use-settings.ts hook, staleTime 5min)

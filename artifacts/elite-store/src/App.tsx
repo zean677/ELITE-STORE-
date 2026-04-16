@@ -17,6 +17,7 @@ import Dashboard from "@/pages/Dashboard";
 import WalletPage from "@/pages/WalletPage";
 import Deposit from "@/pages/Deposit";
 import Orders from "@/pages/Orders";
+import OrderResult from "@/pages/OrderResult";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import Support from "@/pages/Support";
@@ -50,6 +51,8 @@ function Router() {
       <Route path="/wallet" component={WalletPage} />
       <Route path="/deposit" component={Deposit} />
       <Route path="/orders" component={Orders} />
+      <Route path="/orders/:id/success" component={OrderResult} />
+      <Route path="/orders/:id/failed" component={OrderResult} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/profile" component={Profile} />
       <Route path="/support" component={Support} />

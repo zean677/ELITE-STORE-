@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, productsTable } from "@workspace/db";
-import { eq, ilike, and, count, sql } from "drizzle-orm";
+import { eq, ilike, and, count, sql, or } from "drizzle-orm";
 import { GetProductsQueryParams, GetProductParams } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -56,6 +56,7 @@ router.get("/products", async (req, res): Promise<void> => {
   const page = qp.success ? (qp.data.page ?? 1) : 1;
   const limit = qp.success ? (qp.data.limit ?? 24) : 24;
   const category = qp.success ? qp.data.category : undefined;
+  const provider = qp.success ? qp.data.provider : undefined;
   const search = qp.success ? qp.data.search : undefined;
   const offset = (page - 1) * limit;
 
@@ -63,8 +64,17 @@ router.get("/products", async (req, res): Promise<void> => {
   if (category) {
     conditions.push(eq(productsTable.category, category));
   }
+  if (provider) {
+    conditions.push(eq(productsTable.provider, provider));
+  }
   if (search) {
-    conditions.push(ilike(productsTable.name, `%${search}%`));
+    conditions.push(or(
+      ilike(productsTable.name, `%${search}%`),
+      ilike(productsTable.nameAr, `%${search}%`),
+      ilike(productsTable.description, `%${search}%`),
+      ilike(productsTable.category, `%${search}%`),
+      ilike(productsTable.provider, `%${search}%`),
+    )!);
   }
 
   const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
@@ -86,6 +96,11 @@ router.get("/products", async (req, res): Promise<void> => {
     .from(productsTable)
     .where(eq(productsTable.status, "active"));
 
+  const providers = await db
+    .selectDistinct({ provider: productsTable.provider })
+    .from(productsTable)
+    .where(eq(productsTable.status, "active"));
+
   res.json({
     products: products.map(p => ({
       ...p,
@@ -97,6 +112,10 @@ router.get("/products", async (req, res): Promise<void> => {
     page,
     limit,
     categories: categories.map(c => c.category),
+    filters: {
+      categories: categories.map(c => c.category),
+      providers: providers.map(p => p.provider),
+    },
   });
 });
 
@@ -113,11 +132,25 @@ router.get("/products/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  const related = await db
+    .select()
+    .from(productsTable)
+    .where(and(eq(productsTable.status, "active"), eq(productsTable.category, product.category), sql`${productsTable.id} <> ${rawId}`))
+    .limit(8);
+
   res.json({
     ...product,
     priceUsd: parseFloat(product.priceUsd ?? "0"),
+    unitPriceUsd: parseFloat(product.unitPriceUsd ?? "0"),
     profitMargin: parseFloat(product.profitMargin ?? "10"),
     requiredFields: product.requiredFields ?? [],
+    relatedProducts: related.map(p => ({
+      ...p,
+      priceUsd: parseFloat(p.priceUsd ?? "0"),
+      unitPriceUsd: parseFloat(p.unitPriceUsd ?? "0"),
+      profitMargin: parseFloat(p.profitMargin ?? "10"),
+      requiredFields: p.requiredFields ?? [],
+    })),
   });
 });
 

@@ -577,11 +577,41 @@ export default function Home() {
   const { lang } = useLanguage();
 
   const { data: apiCats } = useQuery({
-    queryKey: ['public-categories'],
+    queryKey: ['public-product-categories'],
     queryFn: async () => {
-      const res = await fetch(`${BASE}/api/categories`);
+      const res = await fetch(`${BASE}/api/products/categories`);
       if (!res.ok) return null;
-      return res.json();
+      const data = await res.json();
+      const colors: Record<string, string> = {
+        mobile_games: '#7c3aed',
+        pc_games: '#06b6d4',
+        gift_cards: '#f59e0b',
+        services: '#22c55e',
+        general: '#6C5CE7',
+      };
+      const names: Record<string, { ar: string; en: string }> = {
+        mobile_games: { ar: 'ألعاب الموبايل', en: 'Mobile Games' },
+        pc_games: { ar: 'ألعاب الكمبيوتر', en: 'PC Games' },
+        gift_cards: { ar: 'البطاقات', en: 'Gift Cards' },
+        services: { ar: 'الخدمات الرقمية', en: 'Digital Services' },
+        general: { ar: 'منتجات عامة', en: 'General' },
+      };
+      return (data.categories ?? []).map((cat: any) => ({
+        id: cat.slug,
+        nameAr: names[cat.slug]?.ar ?? cat.label,
+        nameEn: names[cat.slug]?.en ?? cat.label,
+        href: `/products?category=${cat.slug}`,
+        color: colors[cat.slug] ?? '#6C5CE7',
+        bgGradient: `linear-gradient(145deg, ${colors[cat.slug] ?? '#6C5CE7'}22, #0F172A)`,
+        icon1: '',
+        icon2: '',
+        icon3: '',
+        icon4: '',
+        iconLabel1: `${cat.count}`,
+        iconLabel2: 'API',
+        iconLabel3: '',
+        iconLabel4: '',
+      }));
     },
     staleTime: 5 * 60 * 1000,
   });
