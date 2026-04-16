@@ -40,12 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('elite_token', newToken);
+    localStorage.setItem('elite_login_at', Date.now().toString());
     setTokenState(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
     localStorage.removeItem('elite_token');
+    localStorage.removeItem('elite_login_at');
     setTokenState(null);
     setUser(null);
   };

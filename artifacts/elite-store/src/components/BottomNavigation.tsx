@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'wouter';
-import { Home, ShoppingBag, Wallet, Package, User } from 'lucide-react';
+import { Home, Wallet, Package, User, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -25,21 +25,14 @@ export function BottomNavigation() {
       match: (l: string) => l === '/',
     },
     {
-      href: '/products',
-      icon: ShoppingBag,
-      label: lang === 'ar' ? 'المتجر' : 'Store',
-      color: '#00CEC9',
-      match: (l: string) => l.startsWith('/products'),
-    },
-    {
-      href: '/wallet',
+      href: user ? '/wallet' : '/login',
       icon: Wallet,
       label: lang === 'ar' ? 'المحفظة' : 'Wallet',
       color: '#f59e0b',
       match: (l: string) => l === '/wallet' || l === '/deposit',
     },
     {
-      href: '/orders',
+      href: user ? '/orders' : '/login',
       icon: Package,
       label: lang === 'ar' ? 'طلباتي' : 'Orders',
       color: '#22c55e',
@@ -48,9 +41,16 @@ export function BottomNavigation() {
     {
       href: user ? '/profile' : '/login',
       icon: User,
-      label: lang === 'ar' ? 'حسابي' : 'Account',
+      label: lang === 'ar' ? 'حسابي' : 'Profile',
       color: '#f97316',
       match: (l: string) => l === '/profile' || l === '/dashboard',
+    },
+    {
+      href: '/security',
+      icon: ShieldCheck,
+      label: lang === 'ar' ? 'الأمان' : 'Security',
+      color: '#ef4444',
+      match: (l: string) => l === '/security',
     },
   ];
 
@@ -64,26 +64,24 @@ export function BottomNavigation() {
         boxShadow: '0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.4)',
       }}
     >
-      <div className="flex items-end justify-around px-1 pt-2 pb-safe"
-        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+      <div
+        className="flex items-end justify-around px-1 pt-2"
+        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+      >
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = item.match(location);
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
-              className="flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all duration-200 active:scale-90 select-none"
+              className="flex flex-col items-center gap-1 py-1 px-2 rounded-2xl transition-all duration-200 active:scale-90 select-none min-w-0"
             >
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200"
                 style={{
-                  background: active
-                    ? `${item.color}22`
-                    : 'transparent',
-                  boxShadow: active
-                    ? `0 0 12px ${item.color}44`
-                    : 'none',
+                  background: active ? `${item.color}22` : 'transparent',
+                  boxShadow: active ? `0 0 12px ${item.color}44` : 'none',
                 }}
               >
                 <Icon
@@ -93,7 +91,7 @@ export function BottomNavigation() {
                 />
               </div>
               <span
-                className="text-[10px] font-semibold tracking-wide transition-all duration-200"
+                className="text-[9px] font-semibold tracking-wide transition-all duration-200 truncate max-w-full"
                 style={{ color: active ? item.color : '#6b7280' }}
               >
                 {item.label}

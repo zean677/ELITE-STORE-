@@ -30,6 +30,7 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCategories from "@/pages/admin/AdminCategories";
+import Security from "@/pages/Security";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/support" component={Support} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Terms} />
+      <Route path="/security" component={Security} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/payments" component={AdminPayments} />
