@@ -20,12 +20,12 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await registerMutation.mutateAsync({ username, email, password }) as any;
-      login(data.token, data.user);
+      const result = await registerMutation.mutateAsync({ data: { username, email, password } }) as any;
+      login(result.token, result.user);
       navigate('/dashboard');
     } catch (err: any) {
-      const msg = err?.data?.message ?? err?.data?.error ?? 'Registration failed';
-      toast({ title: 'Registration failed', description: msg, variant: 'destructive' });
+      const msg = err?.response?.data?.message ?? err?.message ?? 'فشل إنشاء الحساب';
+      toast({ title: 'فشل التسجيل', description: msg, variant: 'destructive' });
     }
   };
 
