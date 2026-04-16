@@ -4,13 +4,12 @@ import { motion } from 'framer-motion';
 import { useLogin } from '@workspace/api-client-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/i18n';
-import { Loader2, Mail, Lock, Shield } from 'lucide-react';
+import { Loader2, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showAdminHint, setShowAdminHint] = useState(false);
   const { login } = useAuth();
   const [, navigate] = useLocation();
   const { t, dir } = useLanguage();
@@ -27,11 +26,6 @@ export default function Login() {
       const msg = err?.response?.data?.message ?? err?.message ?? 'بيانات خاطئة أو حساب غير موجود';
       toast({ title: 'فشل تسجيل الدخول', description: msg, variant: 'destructive' });
     }
-  };
-
-  const quickFill = (e: string, p: string) => {
-    setEmail(e);
-    setPassword(p);
   };
 
   return (
@@ -103,61 +97,6 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Quick login hints */}
-          <div className="mt-4 space-y-2">
-            {/* Demo user */}
-            <button
-              type="button"
-              onClick={() => quickFill('user@elitestore.com', 'user123')}
-              className="w-full p-3 bg-background rounded-xl border border-border text-xs text-right hover:border-primary/40 transition-colors"
-              dir="rtl"
-            >
-              <span className="text-muted-foreground">🔑 حساب تجريبي: </span>
-              <span className="font-mono text-foreground">user@elitestore.com / user123</span>
-            </button>
-
-            {/* Admin toggle */}
-            <button
-              type="button"
-              onClick={() => setShowAdminHint(v => !v)}
-              className="w-full p-3 bg-background rounded-xl border border-border text-xs text-right hover:border-primary/40 transition-colors flex items-center justify-between"
-              dir="rtl"
-            >
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <Shield size={12} className="text-primary" />
-                دخول لوحة الأدمن
-              </span>
-              <span className="text-primary text-xs">{showAdminHint ? 'إخفاء ▲' : 'عرض ▼'}</span>
-            </button>
-
-            {showAdminHint && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="overflow-hidden"
-              >
-                <div
-                  className="p-3 rounded-xl border text-xs space-y-2"
-                  style={{ background: 'rgba(108,92,231,0.08)', borderColor: 'rgba(108,92,231,0.3)' }}
-                  dir="rtl"
-                >
-                  <p className="text-purple-300 font-bold">🛡️ بيانات حساب الأدمن:</p>
-                  <div className="space-y-1 text-gray-300">
-                    <p>اسم المستخدم: <span className="font-mono text-white">ZEAN.23</span></p>
-                    <p>كلمة المرور: <span className="font-mono text-white">ZEAN333ZEAN#</span></p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => quickFill('ZEAN.23', 'ZEAN333ZEAN#')}
-                    className="w-full py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 mt-1"
-                    style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}
-                  >
-                    ملء البيانات تلقائياً
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </div>
         </div>
       </motion.div>
     </div>
