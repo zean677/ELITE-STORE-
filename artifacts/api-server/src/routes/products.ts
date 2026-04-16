@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, productsTable } from "@workspace/db";
-import { eq, like, and, count, sql } from "drizzle-orm";
+import { eq, ilike, and, count, sql } from "drizzle-orm";
 import { GetProductsQueryParams, GetProductParams } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -64,7 +64,7 @@ router.get("/products", async (req, res): Promise<void> => {
     conditions.push(eq(productsTable.category, category));
   }
   if (search) {
-    conditions.push(like(productsTable.name, `%${search}%`));
+    conditions.push(ilike(productsTable.name, `%${search}%`));
   }
 
   const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, ordersTable, paymentsTable, productsTable, walletTransactionsTable, notificationsTable, settingsTable } from "@workspace/db";
-import { eq, desc, and, count, sum, gte, sql, like } from "drizzle-orm";
+import { eq, desc, and, count, sum, gte, sql, ilike } from "drizzle-orm";
 import { requireAdmin, AuthRequest } from "../lib/auth";
 import { VerifyPaymentBody, GetAdminOrdersQueryParams, GetAdminPaymentsQueryParams, GetAdminUsersQueryParams, UpdateUserBalanceBody, SuspendUserBody } from "@workspace/api-zod";
 import { v4 as uuidv4 } from "uuid";
@@ -193,7 +193,7 @@ router.get("/admin/users", requireAdmin, async (req: AuthRequest, res): Promise<
   const search = qp.success ? qp.data.search : undefined;
   const offset = (page - 1) * limit;
 
-  const conditions = search ? [like(usersTable.email, `%${search}%`)] : [];
+  const conditions = search ? [ilike(usersTable.email, `%${search}%`)] : [];
   const whereClause = conditions.length > 0 ? conditions[0] : undefined;
 
   const totalQ = whereClause
