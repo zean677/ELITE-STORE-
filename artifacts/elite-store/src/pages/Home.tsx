@@ -11,6 +11,34 @@ const BASE = import.meta.env.BASE_URL?.replace(/\/$/, '') || '';
 const WA_GROUP = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
 const WA_SUPPORT = 'https://wa.me/963992718483';
 
+const CATEGORY_ROUTE_OVERRIDES: Record<string, string> = {
+  games: '/products?category=mobile_games',
+  mobile_games: '/products?category=mobile_games',
+  pc_games: '/products?category=pc_games',
+  apps: '/products?category=services&q=apps',
+  social: '/products?category=services&q=social',
+  telecom: '/products?category=general&q=telecom',
+  gift_cards: '/products?category=gift_cards',
+  crypto: '/products?category=general&q=crypto',
+  ai: '/products?category=services&q=ai',
+  subscriptions: '/products?category=services&q=premium',
+  design: '/products?category=services&q=design',
+  accounts: '/products?category=general&q=numbers',
+  wholesale: '/products?category=general&q=accounts',
+  services: '/products?category=services',
+  general: '/products?category=general',
+};
+
+function normalizeCategoryHref(cat: { id?: string | number; href?: string }) {
+  const id = String(cat.id ?? '');
+  if (CATEGORY_ROUTE_OVERRIDES[id]) return CATEGORY_ROUTE_OVERRIDES[id];
+  const href = cat.href ?? '';
+  if (href.includes('/products?category=services/products') || href.includes('q=telecomq=') || href.includes('q=cryptoq=') || href.includes('q=numbersq=') || href.includes('q=accountsq=')) {
+    return CATEGORY_ROUTE_OVERRIDES.general;
+  }
+  return href || '/products';
+}
+
 // ─── Static fallback categories (used if API fails) ──────────
 const CATEGORIES_FALLBACK = [
   {
@@ -279,7 +307,7 @@ function apiToCat(c: any): CatDisplay {
     id: c.id,
     nameAr: c.nameAr,
     nameEn: c.nameEn,
-    href: c.href,
+    href: normalizeCategoryHref(c),
     color: c.color,
     bg: c.bgGradient,
     icons: [
@@ -305,12 +333,12 @@ function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
     >
       <Link href={cat.href} className="block">
         <div
-          className="relative rounded-2xl overflow-hidden"
+          className="relative rounded-2xl overflow-hidden shine-card"
           style={{
             background: cat.bg,
             border: `1px solid ${cat.color}40`,
             boxShadow: `0 4px 20px ${cat.color}18`,
-            minHeight: 130,
+            minHeight: 150,
           }}
         >
           {/* VIP Star badge */}
@@ -323,12 +351,12 @@ function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
           </div>
 
           {/* Icon grid 2×2 */}
-          <div className="p-2.5 pb-1">
-            <div className="grid grid-cols-2 gap-1.5">
+          <div className="p-3 pb-1.5">
+            <div className="grid grid-cols-2 gap-2">
               {cat.icons.map((icon, i) => (
                 <div
                   key={i}
-                  className="aspect-square rounded-xl flex items-center justify-center overflow-hidden"
+                  className="aspect-square rounded-2xl flex items-center justify-center overflow-hidden"
                   style={{
                     background: `${icon.bg}22`,
                     border: `1px solid ${icon.bg}33`,
@@ -338,7 +366,7 @@ function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
                     <img
                       src={icon.img}
                       alt={icon.label}
-                      className="w-7 h-7 object-contain"
+                      className="w-9 h-9 object-contain"
                       onError={() => setImgErrors(s => new Set([...s, i]))}
                     />
                   ) : (
@@ -351,14 +379,14 @@ function CategoryCard({ cat, index }: { cat: CatDisplay; index: number }) {
 
           {/* Category name strip */}
           <div
-            className="w-full text-center py-2 px-2"
+            className="w-full text-center py-2.5 px-2"
             style={{
               background: `linear-gradient(0deg, ${cat.color}33 0%, transparent 100%)`,
               borderTop: `1px solid ${cat.color}30`,
             }}
           >
-            <p className="text-[11px] font-black text-white leading-none">{cat.nameAr}</p>
-            <p className="text-[9px] text-white/40 mt-0.5">{cat.nameEn}</p>
+            <p className="text-[12px] font-black text-white leading-none">{cat.nameAr}</p>
+            <p className="text-[9px] text-white/45 mt-1">{cat.nameEn}</p>
           </div>
         </div>
       </Link>
@@ -461,7 +489,7 @@ function SearchBar() {
   const [q, setQ] = useState('');
 
   const go = () => {
-    if (q.trim()) window.location.href = `/products?q=${encodeURIComponent(q.trim())}`;
+    if (q.trim()) window.location.href = `${BASE}/products?q=${encodeURIComponent(q.trim())}`;
   };
 
   return (
@@ -525,6 +553,25 @@ function StatsBar() {
   );
 }
 
+function NoticePanel() {
+  return (
+    <div className="mb-5 rounded-3xl p-4" dir="rtl" style={{ background: 'linear-gradient(135deg, rgba(108,92,231,0.12), rgba(0,206,201,0.08))', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <h3 className="font-black text-white text-sm">ملاحظة مهمة</h3>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed">تم ترتيب المنتجات ضمن أقسام واضحة لتصل للخدمة المطلوبة بسرعة.</p>
+        </div>
+        <a href={WA_GROUP} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-xs font-black text-white transition-all hover:scale-[1.02] active:scale-95" style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
+          الانضمام للمجتمع
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────
 export default function Home() {
   const { lang } = useLanguage();
@@ -546,10 +593,12 @@ export default function Home() {
   return (
     <PublicLayout>
       <WhatsAppPopup />
-      <div className="max-w-2xl mx-auto px-3 pt-3 pb-24">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-3 pb-24">
 
         {/* Hero */}
         <HeroBanner />
+
+        <NoticePanel />
 
         {/* Search */}
         <SearchBar />
@@ -566,7 +615,7 @@ export default function Home() {
         </div>
 
         {/* 3-column category grid */}
-        <div className="grid grid-cols-3 gap-2.5 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-6">
           {displayCats.map((cat, i) => (
             <CategoryCard key={cat.id} cat={cat} index={i} />
           ))}

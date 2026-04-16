@@ -132,6 +132,52 @@ const KNOWN_GAMES: { keywords: string[]; info: GameInfo }[] = [
     keywords: ['hay day', 'هاي داي'],
     info: { nameEn: 'Hay Day', nameAr: 'هاي داي', grad: 'from-lime-500/50 to-green-800/30', dot: '#84cc16', icon: '🌻' },
   },
+  {
+    keywords: ['telegram', 'تيليجرام', 'تلغرام', 'تيليغرام', 'whatsapp', 'واتساب', 'facebook', 'فيسبوك', 'instagram', 'انستغرام', 'tiktok', 'تيك توك', 'social'],
+    info: { nameEn: 'Social Media', nameAr: 'السوشيال ميديا', grad: 'from-sky-500/50 to-blue-800/30', dot: '#0ea5e9', icon: '📱' },
+  },
+  {
+    keywords: ['netflix', 'spotify', 'youtube premium', 'شاهد', 'osn', 'subscription', 'premium', 'اشتراك', 'اشتراكات'],
+    info: { nameEn: 'Subscriptions', nameAr: 'الاشتراكات', grad: 'from-fuchsia-500/50 to-purple-900/30', dot: '#d946ef', icon: '💎' },
+  },
+  {
+    keywords: ['chatgpt', 'openai', 'midjourney', 'gemini', 'claude', 'ذكاء', 'ai', 'artificial'],
+    info: { nameEn: 'AI Tools', nameAr: 'الذكاء الاصطناعي', grad: 'from-violet-500/50 to-indigo-900/30', dot: '#8b5cf6', icon: '🤖' },
+  },
+  {
+    keywords: ['canva', 'adobe', 'photoshop', 'figma', 'capcut', 'design', 'تصميم'],
+    info: { nameEn: 'Design Tools', nameAr: 'برامج التصميم', grad: 'from-pink-500/50 to-rose-900/30', dot: '#ec4899', icon: '🎨' },
+  },
+  {
+    keywords: ['syriatel', 'سيريتل', 'mtn', 'رصيد', 'اتصالات', 'telecom', 'وحدات'],
+    info: { nameEn: 'Telecom', nameAr: 'الرصيد والاتصالات', grad: 'from-red-500/50 to-orange-900/30', dot: '#ef4444', icon: '📶' },
+  },
+  {
+    keywords: ['usdt', 'tether', 'binance', 'payeer', 'perfect money', 'crypto', 'عملة', 'عملات'],
+    info: { nameEn: 'Crypto', nameAr: 'العملات الرقمية', grad: 'from-yellow-500/50 to-amber-900/30', dot: '#eab308', icon: '₮' },
+  },
+  {
+    keywords: ['number', 'numbers', 'رقم', 'ارقام', 'أرقام', 'sms', 'activation', 'تفعيل'],
+    info: { nameEn: 'Numbers', nameAr: 'الأرقام', grad: 'from-emerald-500/50 to-green-900/30', dot: '#10b981', icon: '#' },
+  },
+  {
+    keywords: ['account', 'accounts', 'حساب', 'حسابات', 'جاهز', 'جامعة'],
+    info: { nameEn: 'Ready Accounts', nameAr: 'الحسابات الجاهزة', grad: 'from-orange-500/50 to-amber-900/30', dot: '#f97316', icon: '👥' },
+  },
+];
+
+const FALLBACK_GROUPS: { category: string; info: GameInfo & { key: string } }[] = [
+  { category: 'mobile_games', info: { nameEn: 'Mobile Games', nameAr: 'ألعاب الموبايل', grad: 'from-violet-600/50 to-purple-900/30', dot: '#7c3aed', icon: '🎮', key: 'mobile_games' } },
+  { category: 'pc_games', info: { nameEn: 'PC Games', nameAr: 'ألعاب الكمبيوتر', grad: 'from-blue-600/50 to-cyan-900/30', dot: '#2563eb', icon: '🖥️', key: 'pc_games' } },
+  { category: 'services', info: { nameEn: 'Social Media', nameAr: 'السوشيال ميديا', grad: 'from-sky-500/50 to-blue-800/30', dot: '#0ea5e9', icon: '📱', key: 'Social Media' } },
+  { category: 'services', info: { nameEn: 'Subscriptions', nameAr: 'الاشتراكات', grad: 'from-fuchsia-500/50 to-purple-900/30', dot: '#d946ef', icon: '💎', key: 'Subscriptions' } },
+  { category: 'services', info: { nameEn: 'AI Tools', nameAr: 'الذكاء الاصطناعي', grad: 'from-violet-500/50 to-indigo-900/30', dot: '#8b5cf6', icon: '🤖', key: 'AI Tools' } },
+  { category: 'services', info: { nameEn: 'Design Tools', nameAr: 'برامج التصميم', grad: 'from-pink-500/50 to-rose-900/30', dot: '#ec4899', icon: '🎨', key: 'Design Tools' } },
+  { category: 'general', info: { nameEn: 'Telecom', nameAr: 'الرصيد والاتصالات', grad: 'from-red-500/50 to-orange-900/30', dot: '#ef4444', icon: '📶', key: 'Telecom' } },
+  { category: 'gift_cards', info: { nameEn: 'Gift Cards', nameAr: 'البطاقات', grad: 'from-amber-500/50 to-orange-700/30', dot: '#d97706', icon: '🎁', key: 'gift_cards' } },
+  { category: 'general', info: { nameEn: 'Crypto', nameAr: 'العملات الرقمية', grad: 'from-yellow-500/50 to-amber-900/30', dot: '#eab308', icon: '₮', key: 'Crypto' } },
+  { category: 'general', info: { nameEn: 'Numbers', nameAr: 'الأرقام', grad: 'from-emerald-500/50 to-green-900/30', dot: '#10b981', icon: '#', key: 'Numbers' } },
+  { category: 'general', info: { nameEn: 'Ready Accounts', nameAr: 'الحسابات الجاهزة', grad: 'from-orange-500/50 to-amber-900/30', dot: '#f97316', icon: '👥', key: 'Ready Accounts' } },
 ];
 
 function getGameInfo(productName: string, category: string): GameInfo & { key: string } {
@@ -141,9 +187,11 @@ function getGameInfo(productName: string, category: string): GameInfo & { key: s
       return { ...game.info, key: game.info.nameEn };
     }
   }
-  // fallback by category
+  if (category === 'mobile_games') return { nameEn: 'Mobile Games', nameAr: 'ألعاب الموبايل', grad: 'from-violet-600/50 to-purple-900/30', dot: '#7c3aed', icon: '🎮', key: 'mobile_games' };
+  if (category === 'pc_games') return { nameEn: 'PC Games', nameAr: 'ألعاب الكمبيوتر', grad: 'from-blue-600/50 to-cyan-900/30', dot: '#2563eb', icon: '🖥️', key: 'pc_games' };
   if (category === 'gift_cards') return { nameEn: 'Gift Cards', nameAr: 'بطاقات هدايا', grad: 'from-amber-500/50 to-orange-700/30', dot: '#d97706', icon: '🎁', key: 'gift_cards' };
   if (category === 'services') return { nameEn: 'Services', nameAr: 'خدمات', grad: 'from-emerald-500/50 to-teal-700/30', dot: '#059669', icon: '⚡', key: 'services' };
+  if (category === 'general') return { nameEn: 'General Services', nameAr: 'خدمات متنوعة', grad: 'from-rose-500/50 to-pink-800/30', dot: '#f43f5e', icon: '🛒', key: 'general' };
   return { nameEn: productName, nameAr: productName, grad: 'from-primary/30 to-secondary/10', dot: '#6c5ce7', icon: '🎮', key: productName };
 }
 
@@ -206,7 +254,7 @@ function GameCard({ game, count, onClick, image }: {
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold"
           style={{ background: `${game.dot}22`, border: `1px solid ${game.dot}44`, color: game.dot }}>
           <Package size={9} />
-          {count} {lang === 'ar' ? 'باقة' : 'pkg'}
+          {count > 0 ? `${count} ${lang === 'ar' ? 'باقة' : 'pkg'}` : (lang === 'ar' ? 'قسم' : 'section')}
         </div>
       </div>
 
@@ -369,7 +417,10 @@ export default function Products() {
 
   // Group all products by game
   const games = useMemo(() => {
-    if (!allData?.products) return [];
+    const fallback = FALLBACK_GROUPS
+      .filter(g => !activeCategory || g.category === activeCategory)
+      .map(g => ({ info: g.info, count: 0, image: undefined }));
+    if (!allData?.products || allData.products.length === 0) return fallback;
     const map = new Map<string, { info: GameInfo; count: number; image?: string }>();
     for (const p of allData.products) {
       const info = getGameInfo(p.name, p.category ?? 'general');
@@ -381,8 +432,15 @@ export default function Products() {
         map.set(info.key, { info, count: 1, image: p.image ?? undefined });
       }
     }
-    return Array.from(map.values()).sort((a, b) => b.count - a.count);
-  }, [allData?.products]);
+    const priority = ['Mobile Games', 'PC Games', 'Social Media', 'Subscriptions', 'AI Tools', 'Design Tools', 'Telecom', 'Gift Cards', 'Crypto', 'Numbers', 'Ready Accounts', 'Services', 'General Services'];
+    const grouped = Array.from(map.values()).sort((a, b) => {
+      const ai = priority.indexOf(a.info.nameEn);
+      const bi = priority.indexOf(b.info.nameEn);
+      if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      return b.count - a.count;
+    });
+    return grouped.length > 0 ? grouped : fallback;
+  }, [allData?.products, activeCategory]);
 
   const products = gameData?.products ?? [];
   const total = gameData?.total ?? 0;
@@ -394,7 +452,6 @@ export default function Products() {
   };
 
   const handleGameSelect = (gameKey: string) => {
-    // Find the English keyword to use as search
     const game = KNOWN_GAMES.find(g => g.info.nameEn === gameKey);
     if (game) {
       setSelectedGame(game.keywords[0]);
@@ -411,9 +468,11 @@ export default function Products() {
 
   const selectedGameInfo = useMemo(() => {
     if (!selectedGame) return null;
-    const found = KNOWN_GAMES.find(g => g.keywords[0] === selectedGame);
-    return found?.info ?? null;
-  }, [selectedGame]);
+    const found = KNOWN_GAMES.find(g => g.keywords.includes(selectedGame) || g.info.nameEn === selectedGame);
+    if (found?.info) return found.info;
+    const grouped = games.find(g => g.info.key === selectedGame || g.info.nameEn === selectedGame);
+    return grouped?.info ?? getGameInfo(selectedGame, activeCategory || 'general');
+  }, [selectedGame, games, activeCategory]);
 
   return (
     <PublicLayout>
@@ -441,7 +500,10 @@ export default function Products() {
         </AnimatePresence>
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 rounded-3xl p-5 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(108,92,231,0.16), rgba(0,206,201,0.08), rgba(17,24,39,0.72))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="absolute -top-16 -left-16 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-secondary/10 blur-3xl" />
+          <div className="relative">
           <h1 className="font-heading text-3xl font-black mb-1">
             {selectedGame && selectedGameInfo
               ? (lang === 'ar' ? selectedGameInfo.nameAr : selectedGameInfo.nameEn)
@@ -449,9 +511,10 @@ export default function Products() {
           </h1>
           <p className="text-muted-foreground text-sm">
             {showingGames
-              ? (lang === 'ar' ? `${games.length} لعبة متاحة` : `${games.length} games available`)
+              ? (lang === 'ar' ? `${games.length} قسم مرتب للمنتجات` : `${games.length} organized product groups`)
               : (lang === 'ar' ? `${total} منتج متاح` : `${total} products available`)}
           </p>
+          </div>
         </div>
 
         {/* Search */}

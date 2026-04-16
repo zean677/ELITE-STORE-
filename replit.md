@@ -39,6 +39,8 @@ A professional Arabic-first digital products store and game top-up platform. Dar
 ### Features
 - Multi-language (AR/EN), multi-currency (USD/SYP/EUR)
 - 12 category cards on home page (3-column grid, 2×2 icon grid per card, VIP badge, gradient overlays) — matches shams4store.com style
+- Home page category layout updated to a wider responsive Shams4Store-style section grid with fixed category routing and a community notice panel
+- Products page now groups products into organized service/game sections first, with fallback section cards if product API data is unavailable
 - Animated announcement ticker at top of every page (gradient purple-cyan)
 - Stats bar on home page (24/7, 100%, 500+, 10K+)
 - Products synced from shams4store API (`SHAMS4STORE_API_TOKEN` env var, shared environment)
@@ -46,6 +48,7 @@ A professional Arabic-first digital products store and game top-up platform. Dar
 - Wallet system: Syriatel Cash (14816688) + ShamCash (wallet: zean677, ID: 5649dd63431812890980008b5b1c3d53)
 - Dynamic SYP rate from admin settings API (use-settings.ts hook, staleTime 5min)
 - Orders page with Arabic status tabs + date filter + search
+- Development PostgreSQL database was provisioned and schema pushed; API seed created default admin, demo user, 46 demo products, and 12 categories
 
 ### shams4store API
 - Base URL: `https://api.shams4store.com/client/api/`
