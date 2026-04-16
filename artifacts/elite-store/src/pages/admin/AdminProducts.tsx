@@ -8,11 +8,10 @@ import { Layers, Search, ShoppingBag, RefreshCw, Loader2, Plus, Pencil, Trash2, 
 import { useToast } from '@/hooks/use-toast';
 
 const CATEGORIES = [
-  { value: 'mobile_games', label: 'Mobile Games' },
-  { value: 'pc_games', label: 'PC Games' },
-  { value: 'gift_cards', label: 'Gift Cards' },
-  { value: 'services', label: 'Services' },
-  { value: 'general', label: 'General' },
+  { value: 'mobile_games', label: 'ألعاب موبايل' },
+  { value: 'pc_games', label: 'ألعاب كمبيوتر' },
+  { value: 'gift_cards', label: 'بطاقات هدية' },
+  { value: 'services', label: 'خدمات' },
 ];
 
 const emptyForm = {
@@ -21,7 +20,7 @@ const emptyForm = {
   description: '',
   image: '',
   priceUsd: '',
-  category: 'general',
+  category: 'mobile_games',
   provider: 'manual',
   providerProductId: '',
   status: 'active' as 'active' | 'inactive',

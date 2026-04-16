@@ -16,11 +16,12 @@ interface MethodInfo {
   color: string;
   type: 'auto' | 'manual';
   details: { label: string; value: string }[];
+  comingSoon?: boolean;
 }
 
 const METHODS: Record<string, MethodInfo> = {
   syriatel_cash_auto: {
-    nameAr: 'سيريتل كاش اوتوماتيك',
+    nameAr: 'سيريتل كاش أوتو',
     nameEn: 'Syriatel Cash Auto',
     emoji: '📱',
     color: '#ef4444',
@@ -28,7 +29,7 @@ const METHODS: Record<string, MethodInfo> = {
     details: [{ label: 'الرقم', value: '14816688' }],
   },
   sham_cash_auto: {
-    nameAr: 'شام كاش اوتوماتيك',
+    nameAr: 'شام كاش أوتو',
     nameEn: 'Sham Cash Auto',
     emoji: '💳',
     color: '#3b82f6',
@@ -37,38 +38,6 @@ const METHODS: Record<string, MethodInfo> = {
       { label: 'اسم المحفظة', value: 'zean677' },
       { label: 'معرّف المحفظة', value: '5649dd63431812890980008b5b1c3d53' },
     ],
-  },
-  usdt_bep20_auto: {
-    nameAr: 'USDT BEP-20 اوتوماتيك',
-    nameEn: 'USDT BEP-20 Auto',
-    emoji: '💚',
-    color: '#22c55e',
-    type: 'auto',
-    details: [{ label: 'الشبكة', value: 'BEP-20 (BSC)' }, { label: 'العنوان', value: '0x...' }],
-  },
-  binance_id: {
-    nameAr: 'Binance ID',
-    nameEn: 'Binance ID',
-    emoji: '🟡',
-    color: '#f59e0b',
-    type: 'manual',
-    details: [{ label: 'Binance ID', value: '123456789' }],
-  },
-  coinex: {
-    nameAr: 'CoinEx',
-    nameEn: 'CoinEx',
-    emoji: '🟢',
-    color: '#10b981',
-    type: 'manual',
-    details: [{ label: 'CoinEx UID', value: '987654321' }],
-  },
-  usdt_manual: {
-    nameAr: 'USDT يدوي',
-    nameEn: 'USDT Manual',
-    emoji: '💵',
-    color: '#22c55e',
-    type: 'manual',
-    details: [{ label: 'TRC-20 Address', value: 'T...' }],
   },
   syriatel_cash_manual: {
     nameAr: 'سيريتل كاش يدوي',
@@ -93,6 +62,24 @@ const METHODS: Record<string, MethodInfo> = {
     color: '#8b5cf6',
     type: 'manual',
     details: [{ label: 'اسم المحفظة', value: 'zean677' }],
+  },
+  usdt_bep20: {
+    nameAr: 'USDT BEP-20',
+    nameEn: 'USDT BEP-20',
+    emoji: '💚',
+    color: '#22c55e',
+    type: 'manual',
+    details: [{ label: 'الشبكة', value: 'BEP-20 (BSC)' }],
+    comingSoon: true,
+  },
+  binance_id: {
+    nameAr: 'Binance Pay',
+    nameEn: 'Binance Pay',
+    emoji: '🟡',
+    color: '#f59e0b',
+    type: 'manual',
+    details: [],
+    comingSoon: true,
   },
 };
 
@@ -218,30 +205,40 @@ export default function Deposit() {
                       <motion.button
                         key={key}
                         type="button"
-                        onClick={() => setMethod(key)}
+                        onClick={() => !info.comingSoon && setMethod(key)}
+                        disabled={info.comingSoon}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.04 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={!info.comingSoon ? { scale: 0.95 } : {}}
                         className="relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all overflow-hidden"
                         style={{
-                          background: selected
+                          background: info.comingSoon
+                            ? 'linear-gradient(145deg, #111, #0d0d1a)'
+                            : selected
                             ? `linear-gradient(145deg, ${info.color}33, ${info.color}18)`
                             : 'linear-gradient(145deg, #1a1a2e, #16213e)',
-                          border: selected ? `2px solid ${info.color}` : '2px solid #2a2a40',
-                          boxShadow: selected ? `0 0 20px ${info.color}30` : '0 4px 12px rgba(0,0,0,0.4)',
+                          border: info.comingSoon ? '2px dashed #2a2a40' : selected ? `2px solid ${info.color}` : '2px solid #2a2a40',
+                          boxShadow: selected && !info.comingSoon ? `0 0 20px ${info.color}30` : '0 4px 12px rgba(0,0,0,0.4)',
+                          opacity: info.comingSoon ? 0.55 : 1,
+                          cursor: info.comingSoon ? 'not-allowed' : 'pointer',
                         }}
                       >
                         {/* Stars decoration */}
-                        <div className="absolute top-1 left-1">
-                          <span className="text-yellow-400/60 text-[8px]">★</span>
-                        </div>
-                        <div className="absolute top-1 right-1">
-                          <span className="text-yellow-400/60 text-[8px]">★</span>
-                        </div>
+                        {!info.comingSoon && <>
+                          <div className="absolute top-1 left-1"><span className="text-yellow-400/60 text-[8px]">★</span></div>
+                          <div className="absolute top-1 right-1"><span className="text-yellow-400/60 text-[8px]">★</span></div>
+                        </>}
+
+                        {/* Coming soon badge */}
+                        {info.comingSoon && (
+                          <div className="absolute top-1 right-1 bg-amber-500/20 border border-amber-500/40 rounded-md px-1 py-0.5">
+                            <span className="text-amber-400 text-[7px] font-bold">قريباً</span>
+                          </div>
+                        )}
 
                         {/* Selected check */}
-                        {selected && (
+                        {selected && !info.comingSoon && (
                           <div className="absolute top-2 left-2 w-4 h-4 rounded-full flex items-center justify-center z-10"
                             style={{ background: info.color }}>
                             <CheckCircle size={10} className="text-white" />
@@ -261,14 +258,16 @@ export default function Deposit() {
                           {lang === 'ar' ? info.nameAr : info.nameEn}
                         </span>
 
-                        <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
-                          style={{
-                            background: info.type === 'auto' ? '#22c55e20' : '#f59e0b20',
-                            color: info.type === 'auto' ? '#22c55e' : '#f59e0b',
-                            border: `1px solid ${info.type === 'auto' ? '#22c55e40' : '#f59e0b40'}`,
-                          }}>
-                          {info.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
-                        </span>
+                        {!info.comingSoon && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{
+                              background: info.type === 'auto' ? '#22c55e20' : '#f59e0b20',
+                              color: info.type === 'auto' ? '#22c55e' : '#f59e0b',
+                              border: `1px solid ${info.type === 'auto' ? '#22c55e40' : '#f59e0b40'}`,
+                            }}>
+                            {info.type === 'auto' ? (lang === 'ar' ? 'أوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
+                          </span>
+                        )}
                       </motion.button>
                     );
                   })}

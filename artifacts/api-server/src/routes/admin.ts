@@ -173,8 +173,13 @@ router.post("/admin/payments/:id/verify", requireAdmin, async (req: AuthRequest,
   }
 
   if (action === "approve") {
-    const amountUsd = parseFloat(payment.amount ?? "0");
-    const convertedToUsd = payment.currency === "SYP" ? amountUsd / 13000 : payment.currency === "EUR" ? amountUsd / 0.92 : amountUsd;
+    const amountRaw = parseFloat(payment.amount ?? "0");
+    // Read dynamic rates from settings
+    const sypRateRow = await db.select().from(settingsTable).where(eq(settingsTable.key, "syp_rate"));
+    const eurRateRow = await db.select().from(settingsTable).where(eq(settingsTable.key, "eur_rate"));
+    const sypRate = parseFloat(sypRateRow[0]?.value ?? "13000");
+    const eurRate = parseFloat(eurRateRow[0]?.value ?? "0.92");
+    const convertedToUsd = payment.currency === "SYP" ? amountRaw / sypRate : payment.currency === "EUR" ? amountRaw / eurRate : amountRaw;
 
     await db
       .update(usersTable)
@@ -186,14 +191,14 @@ router.post("/admin/payments/:id/verify", requireAdmin, async (req: AuthRequest,
       type: "deposit",
       amount: convertedToUsd.toString(),
       currency: "USD",
-      description: `Deposit via ${payment.method} (${payment.currency} ${payment.amount})`,
+      description: `إيداع عبر ${payment.method} (${payment.currency} ${payment.amount})`,
     });
 
     await db.insert(notificationsTable).values({
       userId: payment.userId,
       type: "payment_approved",
-      title: "Payment Approved",
-      message: `Your deposit of ${payment.currency} ${payment.amount} has been approved and added to your wallet.`,
+      title: "✅ تمت الموافقة على الدفعة",
+      message: `تمت الموافقة على إيداعك بقيمة ${payment.currency} ${parseFloat(payment.amount ?? "0").toLocaleString()} وإضافته لمحفظتك. (≈ $${convertedToUsd.toFixed(2)})`,
       isRead: false,
     });
   }
