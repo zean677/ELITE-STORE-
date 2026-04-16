@@ -367,7 +367,7 @@ export function PublicLayout({ children }: LayoutProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      <main>{children}</main>
+      <main className="pb-24 lg:pb-0">{children}</main>
 
       {/* Footer */}
       <footer className="mt-16 pt-8 pb-4 px-4" style={{ background: 'linear-gradient(0deg, #080d1a, #0F172A)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
@@ -452,14 +452,6 @@ export function DashboardLayout({ children }: LayoutProps) {
   const isAdmin = user?.role === 'admin';
 
   const balanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * sypRate).toFixed(0) : '0';
-
-  const mobileBottomNav = [
-    { href: '/dashboard', icon: Shield, color: '#22c55e', label: lang === 'ar' ? 'حماية' : 'Security' },
-    { href: '/wallet', icon: Wallet, color: '#f59e0b', label: lang === 'ar' ? 'محفظة' : 'Wallet' },
-    { href: '/dashboard', icon: Home, color: '#3b82f6', label: lang === 'ar' ? 'الرئيسية' : 'Home', isCenter: true },
-    { href: '/orders', icon: CreditCard, color: '#3b82f6', label: lang === 'ar' ? 'طلباتي' : 'Orders' },
-    { href: '/products', icon: ShoppingBag, color: '#ef4444', label: lang === 'ar' ? 'المتجر' : 'Store' },
-  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex" dir={dir}>
@@ -618,33 +610,6 @@ export function DashboardLayout({ children }: LayoutProps) {
 
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-border/50" style={{ background: 'rgba(10,10,20,0.97)', backdropFilter: 'blur(20px)' }}>
-        <div className="flex items-end justify-around px-2 pb-2 pt-1">
-          {mobileBottomNav.map((item, idx) => {
-            const Icon = item.icon;
-            const active = location === item.href || (item.href === '/dashboard' && location === '/dashboard');
-            if (item.isCenter) {
-              return (
-                <Link key={idx} href={item.href} className="flex flex-col items-center -mt-5">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-transform active:scale-95"
-                    style={{ background: 'linear-gradient(145deg, #1e3a8a, #3b82f6)', boxShadow: '0 -4px 20px rgba(59,130,246,0.5), 0 4px 15px rgba(0,0,0,0.5)' }}>
-                    <Icon size={26} color="#fff" />
-                  </div>
-                  <span className="text-[10px] mt-1 font-medium" style={{ color: '#3b82f6' }}>{item.label}</span>
-                </Link>
-              );
-            }
-            return (
-              <Link key={idx} href={item.href} className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all active:scale-95">
-                <Icon size={22} color={active ? item.color : '#6b7280'} />
-                <span className="text-[10px] font-medium" style={{ color: active ? item.color : '#6b7280' }}>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
 
       <FloatingSupport />
     </div>

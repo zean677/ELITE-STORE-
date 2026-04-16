@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/i18n";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { AuthProvider } from "@/hooks/use-auth";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { BottomNavigation } from "@/components/BottomNavigation";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -80,6 +81,7 @@ function App() {
               <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
                 <AnnouncementBanner />
                 <Router />
+                <BottomNavigation />
               </WouterRouter>
               <Toaster />
             </TooltipProvider>
