@@ -457,22 +457,17 @@ const HERO_SLIDES = [
 
 function HeroBanner() {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = (idx: number) => {
-    if (isAnimating || idx === activeSlide) return;
-    setIsAnimating(true);
     setActiveSlide(idx);
-    setTimeout(() => setIsAnimating(false), 600);
   };
 
-  const next = () => goTo((activeSlide + 1) % HERO_SLIDES.length);
-
   useEffect(() => {
-    timerRef.current = setInterval(next, 4500);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [activeSlide]);
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % HERO_SLIDES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   const slide = HERO_SLIDES[activeSlide];
 

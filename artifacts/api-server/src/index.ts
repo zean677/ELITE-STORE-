@@ -20,17 +20,27 @@ if (Number.isNaN(port) || port <= 0) {
 
 async function seedAdminUser() {
   try {
-    const adminUsername = "ZEAN.23";
+    const adminUsername = "Zean.23";
     const adminEmail = "zean23@elitestore.admin";
-    const adminPassword = "ZEAN333ZEAN#";
+    const adminPassword = "Zean333zean#";
 
-    const [existing] = await db
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
+
+    // Check by email first (handles ZEAN.23 -> Zean.23 migration)
+    const [existingByEmail] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.username, adminUsername));
+      .where(eq(usersTable.email, adminEmail));
 
-    if (!existing) {
-      const passwordHash = await bcrypt.hash(adminPassword, 12);
+    if (existingByEmail) {
+      // Update existing admin to new credentials
+      await db
+        .update(usersTable)
+        .set({ username: adminUsername, passwordHash, role: "admin" })
+        .where(eq(usersTable.email, adminEmail));
+      logger.info({ username: adminUsername }, "Admin user updated");
+    } else {
+      // Create fresh admin
       await db.insert(usersTable).values({
         username: adminUsername,
         email: adminEmail,
@@ -40,12 +50,6 @@ async function seedAdminUser() {
         isSuspended: false,
       });
       logger.info({ username: adminUsername }, "Admin user created");
-    } else if (existing.role !== "admin") {
-      await db
-        .update(usersTable)
-        .set({ role: "admin" })
-        .where(eq(usersTable.username, adminUsername));
-      logger.info({ username: adminUsername }, "Admin role restored");
     }
   } catch (err) {
     logger.warn({ err }, "Could not seed admin user");

@@ -237,6 +237,8 @@ function GameCard({ game, count, onClick, image }: {
           <img
             src={image}
             alt={name}
+            loading="lazy"
+            decoding="async"
             className="h-16 w-auto object-contain drop-shadow-2xl z-10"
             onError={(e) => {
               const el = e.currentTarget;
@@ -296,6 +298,8 @@ function ProductCard({ product }: { product: any }) {
           <img
             src={product.image}
             alt={name}
+            loading="lazy"
+            decoding="async"
             className="h-16 w-auto object-contain drop-shadow-2xl z-10"
             onError={(e) => {
               const el = e.currentTarget;
@@ -529,8 +533,8 @@ export default function Products() {
           />
         </div>
 
-        {/* Category Tabs */}
-        {categoriesData && categoriesData.length > 0 && (
+        {/* Category Tabs — only in lobby view, not inside a game/section */}
+        {categoriesData && categoriesData.length > 0 && !selectedGame && (
           <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-none">
             <motion.button
               whileHover={{ scale: 1.03 }}

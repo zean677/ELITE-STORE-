@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/i18n';
@@ -12,7 +12,7 @@ import {
   ChevronDown, Menu, X, Shield, BarChart2, Users, CreditCard,
   LogOut, Layers, ChevronRight, MessageCircle, Users2, Coins
 } from 'lucide-react';
-import { useSettings } from '@/hooks/use-settings';
+import { useCurrency } from '@/hooks/use-currency';
 
 const WHATSAPP_NUMBER = '963992718483';
 const GROUP_LINK = 'https://chat.whatsapp.com/DmATlEZYLFgHbWuo4HOVay?mode=gi_t';
@@ -97,13 +97,28 @@ interface LayoutProps {
 export function PublicLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { t, dir, lang } = useLanguage();
-  const { sypRate } = useSettings();
+  const { formatPrice } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
   const unreadCount = (notifications || []).filter(n => !n.isRead).length;
   const [location] = useLocation();
-  const userBalanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * sypRate).toFixed(0) : '0';
+  const userBalanceDisplay = user ? formatPrice(parseFloat(user.balance?.toString() ?? '0')) : '';
+
+  useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={dir}>
@@ -140,8 +155,7 @@ export function PublicLayout({ children }: LayoutProps) {
                   {/* Wallet Balance - visible on all sizes */}
                   <Link href="/wallet" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/15 transition-colors">
                     <Coins size={12} className="text-green-400 shrink-0" />
-                    <span className="text-xs font-bold text-green-400">{userBalanceSYP}</span>
-                    <span className="text-[10px] text-green-400/80">ل.س</span>
+                    <span className="text-xs font-bold text-green-400">{userBalanceDisplay}</span>
                   </Link>
                   <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
                     <Bell size={18} className="text-muted-foreground" />
@@ -247,7 +261,7 @@ export function PublicLayout({ children }: LayoutProps) {
                       <p className="font-bold text-sm truncate">{user.username}</p>
                       <div className="flex items-center gap-1 mt-0.5">
                         <Coins size={11} className="text-green-400" />
-                        <span className="text-green-400 text-xs font-bold">{userBalanceSYP} ل.س</span>
+                        <span className="text-green-400 text-xs font-bold">{userBalanceDisplay}</span>
                       </div>
                     </div>
                   </div>
@@ -407,11 +421,26 @@ export function PublicLayout({ children }: LayoutProps) {
 export function DashboardLayout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { t, dir, lang } = useLanguage();
-  const { sypRate } = useSettings();
+  const { formatPrice } = useCurrency();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: notifications } = useGetNotifications({ query: { enabled: !!user } });
   const unreadCount = (notifications || []).filter((n: any) => !n.isRead).length;
+
+  useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [sidebarOpen]);
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: t('dashboard') },
@@ -436,7 +465,7 @@ export function DashboardLayout({ children }: LayoutProps) {
 
   const isAdmin = user?.role === 'admin';
 
-  const balanceSYP = user ? (parseFloat(user.balance?.toString() ?? '0') * sypRate).toFixed(0) : '0';
+  const balanceDisplay = user ? formatPrice(parseFloat(user.balance?.toString() ?? '0')) : '';
 
   return (
     <div className="min-h-screen bg-background text-foreground flex" dir={dir}>
@@ -461,7 +490,7 @@ export function DashboardLayout({ children }: LayoutProps) {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">{user.username}</p>
-                <p className="text-xs text-secondary font-medium">{balanceSYP} ل.س</p>
+                <p className="text-xs text-secondary font-medium">{balanceDisplay}</p>
               </div>
             </div>
           </div>
@@ -517,10 +546,7 @@ export function DashboardLayout({ children }: LayoutProps) {
           <div className="flex items-center justify-between h-14 px-3 gap-2" dir="rtl">
             {/* Right side: Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/40">
-                <span className="text-white font-black text-sm">E</span>
-              </div>
-              <span className="font-bold text-sm tracking-tight font-heading hidden xs:block">ELITE STORE</span>
+              <Logo size={28} withText={true} />
             </Link>
 
             {/* Left side: controls */}
@@ -531,8 +557,7 @@ export function DashboardLayout({ children }: LayoutProps) {
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-colors"
                 >
                   <span className="text-primary text-xs font-bold">+</span>
-                  <span className="text-xs font-bold text-white">{balanceSYP}</span>
-                  <span className="text-[10px] text-primary/80 font-medium">ل.س</span>
+                  <span className="text-xs font-bold text-white">{balanceDisplay}</span>
                 </Link>
               )}
 
@@ -577,7 +602,7 @@ export function DashboardLayout({ children }: LayoutProps) {
               <div className="flex items-center gap-3">
                 <Link href="/deposit" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 transition-colors">
                   <span className="text-green-400 text-xs font-bold">+</span>
-                  <span className="text-xs font-bold text-white">{balanceSYP} ل.س</span>
+                  <span className="text-xs font-bold text-white">{balanceDisplay}</span>
                 </Link>
                 <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-card transition-colors">
                   <Bell size={18} className="text-muted-foreground" />

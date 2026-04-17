@@ -5,7 +5,7 @@ import { useGetWallet, useGetWalletHistory } from '@workspace/api-client-react';
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLanguage } from '@/i18n';
-import { useSettings } from '@/hooks/use-settings';
+import { useCurrency } from '@/hooks/use-currency';
 import { Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, PlusCircle, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
 
 const typeConfig: Record<string, { icon: any; color: string; sign: string }> = {
@@ -18,7 +18,7 @@ const tabOptions = ['الكل', 'طلبات', 'مسترجع الطلبات'];
 
 export default function WalletPage() {
   const { lang } = useLanguage();
-  const { sypRate: SYP_RATE } = useSettings();
+  const { formatPrice } = useCurrency();
   const { data: wallet } = useGetWallet();
   const { data: history } = useGetWalletHistory({ page: 1, limit: 100 });
   const [tab, setTab] = useState(0);
@@ -41,25 +41,25 @@ export default function WalletPage() {
   const stats = [
     {
       label: lang === 'ar' ? 'اجمالي مشتريات' : 'Total Purchases',
-      value: (totalPurchases * SYP_RATE).toFixed(2),
+      value: formatPrice(totalPurchases),
       bg: '#ef4444',
       icon: ShoppingBag,
     },
     {
       label: lang === 'ar' ? 'رصيدك الحالي' : 'Current Balance',
-      value: (currentBalance * SYP_RATE).toFixed(2),
+      value: formatPrice(currentBalance),
       bg: '#22c55e',
       icon: Wallet,
     },
     {
       label: lang === 'ar' ? 'رصيد مدين' : 'Debit Balance',
-      value: (debitBalance * SYP_RATE).toFixed(2),
+      value: formatPrice(debitBalance),
       bg: '#3b82f6',
       icon: TrendingDown,
     },
     {
       label: lang === 'ar' ? 'الوارد' : 'Total Incoming',
-      value: (totalDeposits * SYP_RATE).toFixed(2),
+      value: formatPrice(totalDeposits),
       bg: '#a855f7',
       icon: TrendingUp,
     },
@@ -155,7 +155,7 @@ export default function WalletPage() {
           {/* Total */}
           <div className="flex justify-end">
             <div className="px-4 py-2 bg-card border border-border rounded-xl text-sm font-bold">
-              {lang === 'ar' ? 'اجمالي' : 'Total'}: {(Math.abs(totalFiltered) * SYP_RATE).toFixed(3)} ل.س
+              {lang === 'ar' ? 'اجمالي' : 'Total'}: {formatPrice(Math.abs(totalFiltered))}
             </div>
           </div>
 
@@ -183,7 +183,7 @@ export default function WalletPage() {
                         </div>
                       </div>
                       <span className={`text-sm font-bold ${cfg.color}`}>
-                        {cfg.sign}{(Math.abs(parseFloat(tx.amount?.toString() ?? '0')) * SYP_RATE).toFixed(2)} ل.س
+                        {cfg.sign}{formatPrice(Math.abs(parseFloat(tx.amount?.toString() ?? '0')))}
                       </span>
                     </motion.div>
                   );

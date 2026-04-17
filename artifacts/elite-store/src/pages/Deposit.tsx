@@ -4,7 +4,7 @@ import { useCreatePayment, useGetMyPayments } from '@workspace/api-client-react'
 import { DashboardLayout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLanguage } from '@/i18n';
-import { Loader2, Upload, CheckCircle, X, Image as ImageIcon, Hash, Clock, XCircle } from 'lucide-react';
+import { Loader2, Upload, CheckCircle, X, Image as ImageIcon, Hash, Clock, XCircle, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type Currency = 'USD' | 'SYP' | 'EUR';
@@ -20,66 +20,62 @@ interface MethodInfo {
 }
 
 const METHODS: Record<string, MethodInfo> = {
-  syriatel_cash_auto: {
-    nameAr: 'سيريتل كاش أوتو',
-    nameEn: 'Syriatel Cash Auto',
+  syriatel_cash: {
+    nameAr: 'سيريتل كاش',
+    nameEn: 'Syriatel Cash',
     emoji: '📱',
     color: '#ef4444',
-    type: 'auto',
-    details: [{ label: 'الرقم', value: '14816688' }],
-  },
-  sham_cash_auto: {
-    nameAr: 'شام كاش أوتو',
-    nameEn: 'Sham Cash Auto',
-    emoji: '💳',
-    color: '#3b82f6',
-    type: 'auto',
+    type: 'manual',
     details: [
-      { label: 'اسم المحفظة', value: 'zean677' },
-      { label: 'معرّف المحفظة', value: '5649dd63431812890980008b5b1c3d53' },
+      { label: 'رقم المحفظة', value: '1122755750' },
+      { label: 'العملة', value: 'ليرة سورية فقط' },
     ],
   },
-  syriatel_cash_manual: {
-    nameAr: 'سيريتل كاش يدوي',
-    nameEn: 'Syriatel Cash Manual',
-    emoji: '📞',
-    color: '#ef4444',
-    type: 'manual',
-    details: [{ label: 'الرقم', value: '14816688' }],
-  },
-  sham_cash_dollar: {
-    nameAr: 'شام كاش دولار',
-    nameEn: 'Sham Cash Dollar',
-    emoji: '💲',
-    color: '#3b82f6',
-    type: 'manual',
-    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
-  },
   sham_cash_syp: {
-    nameAr: 'شام كاش سوري',
-    nameEn: 'Sham Cash Syrian',
+    nameAr: 'شام كاش — ليرة سورية',
+    nameEn: 'Sham Cash SYP',
     emoji: '🇸🇾',
     color: '#8b5cf6',
     type: 'manual',
-    details: [{ label: 'اسم المحفظة', value: 'zean677' }],
+    details: [
+      { label: 'اسم المحفظة', value: 'zean677' },
+      { label: 'معرّف المحفظة', value: '5649dd63431812890980008b5b1c3d53' },
+      { label: 'العملة', value: 'ليرة سورية' },
+    ],
+  },
+  sham_cash_dollar: {
+    nameAr: 'شام كاش — دولار',
+    nameEn: 'Sham Cash USD',
+    emoji: '💲',
+    color: '#3b82f6',
+    type: 'manual',
+    details: [
+      { label: 'اسم المحفظة', value: 'zean677' },
+      { label: 'معرّف المحفظة', value: '5649dd63431812890980008b5b1c3d53' },
+      { label: 'العملة', value: 'دولار أمريكي' },
+    ],
   },
   usdt_bep20: {
-    nameAr: 'USDT BEP-20',
+    nameAr: 'USDT — BEP20',
     nameEn: 'USDT BEP-20',
     emoji: '💚',
     color: '#22c55e',
     type: 'manual',
-    details: [{ label: 'الشبكة', value: 'BEP-20 (BSC)' }],
-    comingSoon: true,
+    details: [
+      { label: 'الشبكة', value: 'BEP-20 (BSC)' },
+      { label: 'عنوان المحفظة', value: '0xf7b0923201d4dcf6a984d5bf400d8185d889d753' },
+    ],
   },
-  binance_id: {
-    nameAr: 'Binance Pay',
-    nameEn: 'Binance Pay',
-    emoji: '🟡',
-    color: '#f59e0b',
+  usdt_trc20: {
+    nameAr: 'USDT — TRC20',
+    nameEn: 'USDT TRC-20',
+    emoji: '🔵',
+    color: '#06b6d4',
     type: 'manual',
-    details: [],
-    comingSoon: true,
+    details: [
+      { label: 'الشبكة', value: 'TRC-20 (TRON)' },
+      { label: 'عنوان المحفظة', value: 'TBEqyveczZvGGksbP7dBErW83YCqFS67dC' },
+    ],
   },
 };
 
@@ -90,7 +86,7 @@ export default function Deposit() {
   const { data: payments } = useGetMyPayments();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [method, setMethod] = useState('syriatel_cash_auto');
+  const [method, setMethod] = useState('syriatel_cash');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('SYP');
   const [transactionRef, setTransactionRef] = useState('');
@@ -294,12 +290,26 @@ export default function Deposit() {
                       {selectedMethod.type === 'auto' ? (lang === 'ar' ? 'اوتوماتيك' : 'Auto') : (lang === 'ar' ? 'يدوي' : 'Manual')}
                     </span>
                   </div>
-                  {selectedMethod.details.map((d, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm p-2 bg-background rounded-xl">
-                      <span className="text-muted-foreground">{d.label}</span>
-                      <span className="font-mono font-bold text-white select-all">{d.value}</span>
-                    </div>
-                  ))}
+                  {selectedMethod.details.map((d, i) => {
+                    const isCopyable = d.value.length > 10 && !d.value.includes(' ');
+                    return (
+                      <div key={i} className="flex justify-between items-center text-sm p-2 bg-background rounded-xl gap-2">
+                        <span className="text-muted-foreground shrink-0">{d.label}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono font-bold text-white select-all truncate">{d.value}</span>
+                          {isCopyable && (
+                            <button
+                              type="button"
+                              onClick={() => { navigator.clipboard.writeText(d.value); toast({ title: lang === 'ar' ? 'تم النسخ!' : 'Copied!' }); }}
+                              className="shrink-0 p-1 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <Copy size={13} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                   <p className="text-xs text-muted-foreground pt-1">
                     {lang === 'ar' ? '⚠️ تأكد من نسخ المعلومات بشكل صحيح قبل التحويل' : '⚠️ Copy the details carefully before transferring'}
                   </p>
